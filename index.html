@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="J.A.R.V.I.S." />
+<meta name="theme-color" content="#020617" />
+<title>J.A.R.V.I.S. // OS v7</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='38' fill='%23020617'/%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%2322d3ee' stroke-width='6' stroke-dasharray='14 8'/%3E%3Ccircle cx='90' cy='90' r='36' fill='%23083344' stroke='%2322d3ee' stroke-width='5'/%3E%3Ctext x='90' y='103' text-anchor='middle' fill='%2322d3ee' font-family='monospace' font-weight='bold' font-size='38'%3EJ%3C/text%3E%3C/svg%3E" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100dvh;background:#020617;color:#e2f1ff;font-family:'Inter',sans-serif;overflow:hidden}
+button,a,label{cursor:pointer;touch-action:manipulation}
+input,textarea,select{user-select:text;font-size:16px}
+main,#chat{-webkit-overflow-scrolling:touch}
+.hud-bg{background-color:#020617;background-image:radial-gradient(circle at 50% -15%,rgba(6,182,212,.18),transparent 52%),radial-gradient(circle at 85% 95%,rgba(245,158,11,.08),transparent 40%),linear-gradient(to right,rgba(0,240,255,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,240,255,.04) 1px,transparent 1px);background-size:auto,auto,26px 26px,26px 26px}
+.card{position:relative;background:linear-gradient(155deg,rgba(8,20,44,.90),rgba(3,9,22,.96));border:1px solid rgba(34,211,238,.26);box-shadow:0 0 24px rgba(6,182,212,.07),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(10px)}
+.card::before{content:"";position:absolute;top:-1px;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,rgba(34,211,238,.7),transparent);pointer-events:none}
+.amber{border-color:rgba(245,158,11,.45)!important;box-shadow:0 0 20px rgba(245,158,11,.08)}
+.disp{font-family:'Orbitron',sans-serif}.mono{font-family:'JetBrains Mono',monospace}
+.inp{background:#091326;border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:8px 10px;color:#fff;font-size:13px}
+.inp-dark{background:rgba(2,6,23,.92);border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:10px 12px;color:#fff;width:100%}
+.lbl{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;color:#94a3b8;margin-bottom:4px;letter-spacing:.05em}
+.tile{background:linear-gradient(160deg,rgba(12,26,52,.85),rgba(4,10,24,.95));border:1px solid rgba(34,211,238,.24);border-radius:14px;padding:8px 9px;min-width:0}
+.tile b{display:block;font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-pill{padding:6px 10px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#94a3b8;border:1px solid rgba(34,211,238,.2);background:rgba(15,23,42,.6);white-space:nowrap}
+.sub-pill.on{background:rgba(6,182,212,.22);color:#22d3ee;border-color:#22d3ee;font-weight:700;box-shadow:0 0 12px rgba(34,211,238,.2)}
+.tab-btn{color:#64748b;transition:.15s}.tab-btn.on{color:#22d3ee;background:rgba(6,182,212,.16);font-weight:700;box-shadow:inset 0 0 12px rgba(34,211,238,.15)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinR{to{transform:rotate(-360deg)}}
+@keyframes pulse1{0%,100%{box-shadow:0 0 22px rgba(34,211,238,.75),inset 0 0 18px rgba(34,211,238,.3)}50%{box-shadow:0 0 50px rgba(34,211,238,1),inset 0 0 28px rgba(34,211,238,.55)}}
+@keyframes pulse2{0%,100%{box-shadow:0 0 28px #f59e0b;transform:scale(1)}50%{box-shadow:0 0 68px #f59e0b;transform:scale(1.08)}}
+.ring{animation:spin 16s linear infinite}.ring2{animation:spinR 11s linear infinite}
+.idle{animation:pulse1 3s ease-in-out infinite}.listen{animation:pulse2 1s ease-in-out infinite;border-color:#f59e0b!important}.speak{animation:pulse1 .55s ease-in-out infinite}
+button:active{transform:scale(.97)}
+</style>
+</head>
+<body class="hud-bg flex flex-col">
+
+<!-- LOCK -->
+<div id="lock" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+  <div class="card rounded-3xl p-6 max-w-sm w-full space-y-4 text-center">
+    <div class="mx-auto w-14 h-14 rounded-full border-2 border-cyan-400 flex items-center justify-center idle text-cyan-300 disp font-bold">J</div>
+    <h2 class="disp text-base font-bold text-cyan-400 tracking-widest">PROTOCOLLO J.A.R.V.I.S.</h2>
+    <p class="text-xs text-slate-400">Inserisci il PIN per sincronizzare Drive e API Key</p>
+    <input id="pin" type="password" inputmode="numeric" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter')unlock()" class="w-full bg-slate-900 border border-cyan-500/40 rounded-xl px-4 py-3 text-center mono text-xl text-cyan-300 tracking-widest focus:outline-none" />
+    <p id="pinMsg" class="hidden text-xs mono text-rose-400"></p>
+    <button id="unlockBtn" type="button" onclick="unlock()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 disp font-bold text-xs uppercase shadow-lg shadow-cyan-500/20">Inizializza Sistema</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="px-3 pb-2.5 pt-2.5 border-b border-cyan-500/25 bg-slate-950/85 backdrop-blur-md shrink-0" style="padding-top:max(10px,env(safe-area-inset-top))">
+  <div class="flex items-center justify-between max-w-2xl mx-auto gap-2">
+    <div class="min-w-0">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+        <h1 class="disp text-sm sm:text-base font-extrabold tracking-widest text-cyan-300 leading-none">J.A.R.V.I.S.</h1>
+        <span id="driveBadge" class="px-1.5 py-0.5 rounded mono text-[9px] bg-slate-800 text-slate-400 border border-slate-700">LOCALE</span>
+      </div>
+      <p id="status" class="mono text-[9px] text-emerald-300 uppercase mt-1 truncate"></p>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" onclick="pullFromDrive(true)" title="Sincronizza Drive" class="p-2 rounded-xl border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 text-xs">🔄</button>
+      <div class="text-right px-1"><div id="clock" class="mono text-xs font-bold text-cyan-300 leading-none">--:--</div><div id="date" class="mono text-[9px] text-slate-400 mt-0.5"></div></div>
+      <button type="button" onclick="openSettings()" class="p-2 rounded-xl border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 text-sm">⚙</button>
+    </div>
+  </div>
+</header>
+
+<main class="flex-1 min-h-0 overflow-y-auto px-3 py-3 max-w-2xl w-full mx-auto space-y-3">
+
+  <!-- TAB CORE -->
+  <section id="tab-core" class="space-y-3">
+    <div id="keyBanner" class="hidden card amber rounded-2xl p-3 flex items-center justify-between gap-2">
+      <div class="text-xs text-amber-200">🔑 Inserisci la <b>Chiave API Gemini</b> una sola volta: verrà salvata su Drive.</div>
+      <button type="button" onclick="openSettings(true)" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shrink-0">Inserisci</button>
+    </div>
+
+    <div id="dash" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+
+    <div class="card rounded-3xl p-4 flex flex-col items-center">
+      <div class="w-full flex justify-between mono text-[10px] text-cyan-400/80 gap-2">
+        <span id="engine" class="truncate"></span>
+        <span id="badge" class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 shrink-0"></span>
+      </div>
+
+      <div class="relative w-36 h-36 flex items-center justify-center my-2">
+        <div class="ring absolute inset-0 rounded-full border-2 border-dashed border-cyan-400/40 pointer-events-none"></div>
+        <div class="ring2 absolute inset-2.5 rounded-full border border-dotted border-amber-400/45 pointer-events-none"></div>
+        <button id="reactor" type="button" onclick="toggleMic()" class="idle relative z-10 w-24 h-24 rounded-full bg-gradient-to-b from-cyan-900/90 via-slate-950 to-slate-950 border-2 border-cyan-300 flex flex-col items-center justify-center transition">
+          <span class="text-2xl">🎙</span>
+          <span id="micLabel" class="disp text-[10px] font-bold tracking-widest text-cyan-200">PARLA</span>
+        </button>
+      </div>
+      <p id="micHint" class="text-[11px] text-slate-400 text-center mb-3"></p>
+
+      <div class="grid grid-cols-3 gap-1.5 w-full mb-2">
+        <button type="button" onclick="morningBriefing()" class="p-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-[11px] text-amber-200 font-medium">☀️ Mattino</button>
+        <button type="button" onclick="eveningReview()" class="p-2 rounded-xl bg-indigo-500/15 border border-indigo-400/40 text-[11px] text-indigo-200 font-medium">🌙 Sera</button>
+        <button type="button" onclick="suggestOutings()" class="p-2 rounded-xl bg-fuchsia-500/15 border border-fuchsia-400/40 text-[11px] text-fuchsia-200 font-medium">🍸 Uscite</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 w-full">
+        <button type="button" onclick="quick('Analizza XAUUSD su M15 con confluenza H4, notizie e livelli')" class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[11px] text-cyan-100 text-left">📊 Analizza XAU M15</button>
+        <button type="button" onclick="quick('Quanto ho fatto in totale nel mio journal trading?')" class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-100 text-left">📈 Totale Trading</button>
+        <button type="button" onclick="quick('Che materie ho domani così preparo lo zaino e quali compiti ho?')" class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-100 text-left">🎒 Zaino domani</button>
+        <button type="button" onclick="quick('Fammi un riepilogo di cosa ho in agenda oggi')" class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-100 text-left">✅ Agenda oggi</button>
+      </div>
+
+      <div class="grid grid-cols-4 gap-1.5 w-full mt-2">
+        <button type="button" onclick="openWhatsApp(agendaSummary())" class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-[10px] text-emerald-200 font-medium">💬 WhatsApp</button>
+        <button type="button" onclick="openExternal('demus://')" class="p-2 rounded-xl bg-fuchsia-500/15 border border-fuchsia-500/40 text-[10px] text-fuchsia-200 font-medium">🎵 Demus</button>
+        <button type="button" onclick="runShortcut('Jarvis Torcia')" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-[10px] text-slate-200">🔦 Torcia</button>
+        <button type="button" onclick="openExternal('metatrader5://')" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-[10px] text-slate-200">📱 MT5</button>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-4">
+      <div class="flex justify-between border-b border-cyan-500/20 pb-2 mb-3">
+        <span class="mono text-xs font-bold text-cyan-400">CANALE NEURALE</span>
+        <button type="button" onclick="clearChat()" class="mono text-[10px] text-slate-400">PULISCI</button>
+      </div>
+      <div id="chat" class="space-y-3 max-h-80 overflow-y-auto text-sm"></div>
+      <form onsubmit="sendText(event)" class="mt-3 flex gap-2">
+        <input id="txt" type="text" placeholder="Es: 'ho speso 12€ pranzo', 'domani studio 2h e palestra', 'analizza M15'..." autocomplete="off" class="inp-dark flex-1 focus:outline-none" />
+        <button type="submit" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold">➤</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TAB TRADING -->
+  <section id="tab-trading" class="hidden space-y-3">
+    <div class="flex gap-1.5 overflow-x-auto pb-1">
+      <button id="trp-live" type="button" onclick="trSub('live')" class="sub-pill on">📊 Grafico & Lotti</button>
+      <button id="trp-journal" type="button" onclick="trSub('journal')" class="sub-pill">📓 Journal & Equity</button>
+      <button id="trp-econ" type="button" onclick="trSub('econ')" class="sub-pill">📅 Calendario Econ.</button>
+    </div>
+
+    <div id="tr-live" class="space-y-3">
+      <div class="card rounded-2xl p-4 space-y-3">
+        <div class="flex justify-between items-center gap-2">
+          <h2 class="disp text-sm font-bold text-cyan-400 truncate">TRADINGVIEW // MULTI-TF</h2>
+          <div class="flex gap-1.5 shrink-0">
+            <button type="button" onclick="initTV()" class="px-2 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 mono text-[10px] text-cyan-300">🔄</button>
+            <button type="button" onclick="openExternal('metatrader5://')" class="px-2 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 mono text-[10px] text-cyan-300">📱 MT5</button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <select id="trSym" onchange="initTV();calcLots()" class="inp flex-1 mono text-cyan-200">
+            <option value="XAUUSD" selected>XAUUSD (Oro Spot)</option><option value="EURUSD">EURUSD</option><option value="GBPUSD">GBPUSD</option>
+            <option value="USDJPY">USDJPY</option><option value="BTCUSD">BTCUSD</option><option value="NAS100">NAS100</option>
+          </select>
+          <select id="trTf" onchange="initTV()" class="inp w-24 mono text-amber-200">
+            <option value="5m">M5</option><option value="15m" selected>M15</option><option value="1h">H1</option><option value="4h">H4</option><option value="1d">D1</option>
+          </select>
+        </div>
+        <div id="tvBox" class="w-full rounded-2xl overflow-hidden border border-cyan-500/30 bg-slate-950" style="height:330px"></div>
+        <input id="chartIdea" type="text" placeholder="Nota opzionale o tua idea (es: doppio minimo / buy zone)..." class="inp-dark focus:outline-none" />
+        <button type="button" onclick="analyzeLiveChart()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 disp font-bold text-xs uppercase">⚡ Analisi Live Multi-Timeframe (H4 + TF)</button>
+        <div class="flex justify-between items-center text-[10px] mono text-slate-400">
+          <label for="chartFile" class="underline">📷 Oppure analizza foto</label>
+          <a href="https://it.tradingview.com/chart/?symbol=OANDA%3AXAUUSD" target="_blank" rel="noopener noreferrer" class="underline text-cyan-300">Apri su TradingView ↗</a>
+        </div>
+        <input id="chartFile" type="file" accept="image/*" class="hidden" onchange="analyzePhotoChart(event)" />
+
+        <div id="chartBox" class="hidden card amber rounded-2xl p-3.5 space-y-2">
+          <div class="flex justify-between items-center gap-2"><div id="chartMeta" class="mono text-[10px] text-amber-300 truncate"></div><div class="flex gap-1.5 shrink-0"><button type="button" onclick="openWhatsApp(currentChartText)" class="px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-200">💬 WhatsApp</button><button type="button" onclick="shareText(currentChartText)" class="px-2 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-[10px] text-cyan-200">📤</button></div></div>
+          <div id="chartOut" class="text-xs text-slate-100 leading-relaxed whitespace-pre-line"></div>
+        </div>
+      </div>
+
+      <!-- CALCOLATORE LOTTI & RISCHIO MT5 -->
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <div class="flex justify-between items-center"><h3 class="disp text-xs font-bold text-emerald-300">🧮 CALCOLATORE LOTTI MT5</h3><span id="lotBadge" class="mono text-[11px] font-bold text-cyan-300">0.00 lotti</span></div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <div><label class="lbl">Conto ($/€)</label><input id="lotBal" type="number" step="1" oninput="calcLots(true)" class="inp w-full mono" placeholder="1000" /></div>
+          <div><label class="lbl">Rischio %</label><input id="lotRisk" type="number" step="0.1" oninput="calcLots(true)" class="inp w-full mono" placeholder="1" /></div>
+          <div><label class="lbl">Entry</label><input id="lotEntry" type="number" step="any" oninput="calcLots()" class="inp w-full mono" placeholder="Prezzo" /></div>
+          <div><label class="lbl">Stop Loss</label><input id="lotSl" type="number" step="any" oninput="calcLots()" class="inp w-full mono" placeholder="SL" /></div>
+          <div><label class="lbl">Take Profit</label><input id="lotTp" type="number" step="any" oninput="calcLots()" class="inp w-full mono" placeholder="TP opz." /></div>
+        </div>
+        <div id="lotInfo" class="mono text-[10px] text-slate-300 bg-slate-950/75 p-2.5 rounded-xl border border-cyan-500/20">Inserisci Entry e Stop Loss per calcolare i lotti esatti.</div>
+      </div>
+
+      <div id="chartsHistBox" class="hidden card rounded-2xl p-4 space-y-2"><div class="flex justify-between items-center"><span class="mono text-[10px] font-bold text-cyan-400">STORICO ANALISI SU DRIVE</span><button type="button" onclick="clearCharts()" class="mono text-[10px] text-slate-400">SVUOTA</button></div><div id="chartsList" class="space-y-2"></div></div>
+    </div>
+
+    <div id="tr-journal" class="hidden space-y-3">
+      <div class="card rounded-2xl p-4 space-y-2">
+        <div class="flex justify-between items-center"><span class="disp text-xs font-bold text-amber-300">✅ CHECKLIST PRE-OPERAZIONE</span><span id="chkScore" class="mono text-[10px] text-cyan-300">0/6</span></div>
+        <div id="chkList" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs"></div>
+      </div>
+
+      <div class="card rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <h2 class="disp text-sm font-bold text-cyan-400">JOURNAL & CURVA EQUITY</h2>
+          <div class="flex gap-1.5">
+            <button type="button" onclick="weeklyTradingReport()" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-200 mono text-[10px] font-bold">📊 Report Sett.</button>
+            <button type="button" onclick="analyzeJournal()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 mono text-[10px] font-bold">🧠 Coach AI</button>
+          </div>
+        </div>
+        <div id="jStats" class="grid grid-cols-3 gap-2 text-center"></div>
+        <div id="jEquity" class="bg-slate-950/80 border border-cyan-500/20 rounded-2xl p-2.5"></div>
+        <div class="bg-slate-950/75 p-3 rounded-2xl border border-cyan-500/25 space-y-2">
+          <div class="flex items-center justify-between"><button type="button" onclick="shiftJMonth(-1)" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs">◀</button><span id="jCalTitle" class="disp text-xs font-bold text-cyan-300 uppercase"></span><div class="flex gap-1.5"><button type="button" onclick="selectJDay('ALL')" id="jAllBtn" class="px-2 py-1 rounded-lg border border-cyan-500/30 mono text-[10px] text-slate-300">Tutti</button><button type="button" onclick="shiftJMonth(1)" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs">▶</button></div></div>
+          <div class="grid grid-cols-7 gap-1 text-center mono text-[9px] text-slate-500"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
+          <div id="jCalGrid" class="grid grid-cols-7 gap-1"></div>
+        </div>
+        <div id="jAiBox" class="hidden card amber rounded-2xl p-3.5 space-y-2">
+          <div class="flex justify-between items-center"><span id="jAiTitle" class="mono text-[10px] font-bold text-amber-300">COACH AI</span><button type="button" onclick="saveStrategyToMemory()" class="px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-[10px] text-cyan-200">💾 Salva in Trading</button></div>
+          <div id="jAiOut" class="text-xs text-slate-100 leading-relaxed whitespace-pre-line"></div>
+        </div>
+        <form onsubmit="addTrade(event)" class="space-y-2 bg-slate-950/70 p-3 rounded-xl border border-cyan-500/20">
+          <div class="flex flex-wrap gap-2"><input id="jDate" type="date" required class="inp mono text-cyan-200" /><input id="jAsset" type="text" value="XAUUSD" required class="inp w-24 mono uppercase" /><input id="jPnl" type="number" step="0.01" required placeholder="+80 / -40" class="inp w-24 mono" /><button type="submit" class="ml-auto px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Salva</button></div>
+          <input id="jNote" type="text" placeholder="Note, setup o errore commesso..." class="inp w-full focus:outline-none" />
+        </form>
+        <div id="jHeader" class="mono text-[10px] text-cyan-400 font-bold"></div>
+        <div id="jList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <div id="tr-econ" class="hidden card rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center"><h2 class="disp text-sm font-bold text-cyan-400">CALENDARIO ECONOMICO</h2><button type="button" onclick="loadEconCal(true)" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 mono text-[10px] text-cyan-200">🔄 Aggiorna</button></div>
+      <div id="econList" class="space-y-2 text-xs text-slate-300">Premi Aggiorna per caricare le news USD/EUR della settimana.</div>
+    </div>
+  </section>
+
+  <!-- TAB SOLDI -->
+  <section id="tab-money" class="hidden space-y-3">
+    <div class="flex gap-1.5 overflow-x-auto pb-1">
+      <button id="mnp-expenses" type="button" onclick="mnSub('expenses')" class="sub-pill on">💸 Spese & Scontrini</button>
+      <button id="mnp-csv" type="button" onclick="mnSub('csv')" class="sub-pill">🏦 CSV & Abbonamenti</button>
+      <button id="mnp-budget" type="button" onclick="mnSub('budget')" class="sub-pill">🎯 Budget & Risparmio</button>
+    </div>
+
+    <div id="mn-expenses" class="card rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center gap-2">
+        <h2 class="disp text-sm font-bold text-cyan-400">FINANZA PERSONALE</h2>
+        <label for="receiptFile" class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 text-[11px] font-bold">📷 Foto Scontrino</label>
+        <input id="receiptFile" type="file" accept="image/*" class="hidden" onchange="importReceipt(event)" />
+      </div>
+      <p id="receiptStatus" class="hidden mono text-[10px] text-cyan-300 text-center bg-slate-950/80 p-2 rounded-xl border border-cyan-500/20"></p>
+      <div id="mStats" class="grid grid-cols-3 gap-2 text-center"></div>
+      <div id="budgetAlerts" class="space-y-1.5"></div>
+      <div id="mChart" class="bg-slate-950/75 border border-cyan-500/20 rounded-2xl p-3 space-y-2"></div>
+      <form onsubmit="addExpenseForm(event)" class="space-y-2 bg-slate-950/70 p-3 rounded-xl border border-cyan-500/20">
+        <div class="flex flex-wrap gap-2">
+          <select id="eType" class="inp w-24 mono"><option value="out">Uscita</option><option value="in">Entrata</option></select>
+          <select id="eCat" class="inp flex-1 mono"><option>Cibo</option><option>Uscite</option><option>Trasporti</option><option>Abbonamenti</option><option>Scuola</option><option>Shopping</option><option>Altro</option></select>
+          <input id="eAmt" type="number" step="0.01" min="0.01" required placeholder="€" class="inp w-24 mono" />
+        </div>
+        <div class="flex gap-2">
+          <input id="eNote" type="text" placeholder="Descrizione (es: pranzo, benzina, Netflix...)" class="inp flex-1" />
+          <button type="submit" class="px-4 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">Salva</button>
+        </div>
+      </form>
+      <div id="eList" class="space-y-2"></div>
+    </div>
+
+    <div id="mn-csv" class="hidden space-y-3">
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-cyan-400">ESTRATTO CONTO BANCA (CSV)</h2>
+        <p class="text-xs text-slate-400">Carica il file .csv scaricato dalla tua banca: Jarvis categorizza i movimenti, individua spese anomale e li importa.</p>
+        <label for="csvFile" class="block w-full py-3 rounded-xl bg-cyan-500/15 border border-cyan-400/50 text-cyan-200 text-xs text-center font-bold">📄 Carica CSV Bancario</label>
+        <input id="csvFile" type="file" accept=".csv,.txt" class="hidden" onchange="importCsv(event)" />
+        <div id="csvOut" class="hidden card amber rounded-2xl p-3 text-xs whitespace-pre-line space-y-2"></div>
+        <button id="csvImpBtn" type="button" onclick="confirmCsvImport()" class="hidden w-full py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">➕ Importa Movimenti in Spese</button>
+      </div>
+      <div class="card rounded-2xl p-4 space-y-3">
+        <div class="flex justify-between items-center"><h3 class="disp text-xs font-bold text-amber-300">🔁 ABBONAMENTI DIMENTICATI</h3><button type="button" onclick="detectSubscriptions()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 mono text-[10px] font-bold">🔍 Analizza</button></div>
+        <div id="subOut" class="text-xs text-slate-300 whitespace-pre-line">Premi Analizza per individuare pagamenti ricorrenti e il costo annuo.</div>
+      </div>
+    </div>
+
+    <div id="mn-budget" class="hidden space-y-3">
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-cyan-400">BUDGET MENSILE PER CATEGORIA</h2>
+        <form onsubmit="saveBudget(event)" class="flex gap-2">
+          <select id="bCat" class="inp flex-1 mono"><option>Cibo</option><option>Uscite</option><option>Trasporti</option><option>Abbonamenti</option><option>Scuola</option><option>Shopping</option><option>Altro</option></select>
+          <input id="bLim" type="number" step="1" min="0" required placeholder="Limite €" class="inp w-24 mono" />
+          <button type="submit" class="px-3.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Imposta</button>
+        </form>
+        <div id="budgetList" class="space-y-2"></div>
+      </div>
+
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-emerald-300">🎯 OBIETTIVO DI RISPARMIO</h2>
+        <form onsubmit="saveSavingsGoal(event)" class="space-y-2">
+          <input id="savTitle" type="text" placeholder="Cosa vuoi raggiungere? (es: Vacanza / Moto)" class="inp w-full" />
+          <div class="grid grid-cols-3 gap-2">
+            <input id="savTarget" type="number" step="1" min="1" placeholder="Target €" class="inp mono" required />
+            <input id="savSaved" type="number" step="1" min="0" placeholder="Già messi €" class="inp mono" />
+            <input id="savDate" type="date" class="inp mono" required />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">Calcola Piano Risparmio</button>
+        </form>
+        <div id="savOut" class="text-xs text-slate-200 bg-slate-950/75 border border-emerald-500/25 rounded-xl p-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB AGENDA -->
+  <section id="tab-agenda" class="hidden space-y-3">
+    <div class="flex gap-1.5 overflow-x-auto pb-1">
+      <button id="agp-cal" type="button" onclick="agSub('cal')" class="sub-pill on">📅 Calendario & Promemoria</button>
+      <button id="agp-goals" type="button" onclick="agSub('goals')" class="sub-pill">🎯 Obiettivi Sett./Mese</button>
+      <button id="agp-lists" type="button" onclick="agSub('lists')" class="sub-pill">🔥 Abitudini & Liste</button>
+    </div>
+
+    <div id="ag-cal" class="card rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center gap-2">
+        <h2 class="disp text-sm font-bold text-cyan-400">AGENDA INTELLIGENTE</h2>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="enableNotifications()" class="px-2 py-1.5 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 mono text-[10px]">🔔 Notifiche</button>
+          <button type="button" onclick="openWhatsApp(agendaSummary())" class="px-2 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 mono text-xs">💬</button>
+          <button type="button" onclick="speak(agendaSummary(), true)" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 mono text-xs">🔊</button>
+        </div>
+      </div>
+      <div class="bg-slate-950/75 p-3 rounded-2xl border border-cyan-500/25 space-y-2">
+        <div class="flex items-center justify-between"><button type="button" onclick="shiftMonth(-1)" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs">◀</button><span id="calTitle" class="disp text-xs font-bold text-cyan-300 uppercase"></span><div class="flex gap-1.5"><button type="button" onclick="selectDay('ALL')" id="allDaysBtn" class="px-2 py-1 rounded-lg border border-cyan-500/30 mono text-[10px] text-slate-300">Tutti</button><button type="button" onclick="shiftMonth(1)" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs">▶</button></div></div>
+        <div class="grid grid-cols-7 gap-1 text-center mono text-[9px] text-slate-500"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
+        <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+      <div id="schoolDayBox" class="hidden bg-cyan-950/35 border border-cyan-500/30 rounded-2xl p-3 space-y-1"><div id="schoolDayTitle" class="mono text-[10px] font-bold text-cyan-300"></div><div id="schoolDayList" class="text-xs text-slate-200 leading-relaxed"></div></div>
+      <form onsubmit="addTask(event)" class="space-y-2 bg-slate-950/70 p-3 rounded-xl border border-cyan-500/20">
+        <div class="flex flex-wrap gap-2">
+          <input id="tDate" type="date" class="inp mono text-cyan-200" /><input id="tTime" type="time" value="15:00" required class="inp mono text-cyan-200" />
+          <select id="tCat" class="inp mono"><option>PERSONALE</option><option>SCUOLA</option><option>LAVORO</option><option>CASA</option><option>TRADING</option><option>SALUTE</option></select>
+          <select id="tRep" class="inp mono text-amber-200"><option value="">Solo data</option><option value="DAILY">Ogni giorno</option><option value="MON">Ogni Lun</option><option value="TUE">Ogni Mar</option><option value="WED">Ogni Mer</option><option value="THU">Ogni Gio</option><option value="FRI">Ogni Ven</option><option value="SAT">Ogni Sab</option><option value="SUN">Ogni Dom</option></select>
+          <button type="submit" class="ml-auto px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Aggiungi</button>
+        </div>
+        <input id="tTitle" type="text" required placeholder="Titolo impegno o verifica..." class="inp w-full focus:outline-none" />
+      </form>
+      <div id="agendaHeader" class="mono text-[10px] text-cyan-400 font-bold pt-1"></div>
+      <div id="agenda" class="space-y-2"></div>
+    </div>
+
+    <div id="ag-goals" class="hidden card rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center"><h2 class="disp text-sm font-bold text-cyan-400">OBIETTIVI SETTIMANA & MESE</h2><button type="button" onclick="aiSplitGoal()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 mono text-[10px]">✨ Dividi con AI</button></div>
+      <form onsubmit="addGoal(event)" class="flex flex-wrap gap-2">
+        <select id="gPeriod" class="inp w-28 mono"><option value="SETTIMANA">Settimana</option><option value="MESE">Mese</option></select>
+        <input id="gTitle" type="text" required placeholder="Obiettivo (es: finire programma Fisica)..." class="inp flex-1" />
+        <button type="submit" class="px-3.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Crea</button>
+      </form>
+      <div id="goalsList" class="space-y-2"></div>
+    </div>
+
+    <div id="ag-lists" class="hidden space-y-3">
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-amber-300">🔥 ABITUDINI GIORNALIERE (STREAK)</h2>
+        <form onsubmit="addHabit(event)" class="flex gap-2">
+          <input id="hTitle" type="text" required placeholder="Nuova abitudine (es: Leggere 20 min)..." class="inp flex-1" />
+          <button type="submit" class="px-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">+</button>
+        </form>
+        <div id="habitsList" class="space-y-2"></div>
+      </div>
+
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-cyan-400">📝 LISTE (SPESA / COSE DA FARE)</h2>
+        <form onsubmit="addListItem(event)" class="flex flex-wrap gap-2">
+          <input id="lName" type="text" value="Spesa" class="inp w-24 mono" placeholder="Lista" />
+          <input id="lItem" type="text" required placeholder="Voce da aggiungere..." class="inp flex-1" />
+          <button type="submit" class="px-3.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+</button>
+        </form>
+        <div id="listsBox" class="space-y-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB SCUOLA -->
+  <section id="tab-school" class="hidden space-y-3">
+    <div class="flex gap-1.5 overflow-x-auto pb-1">
+      <button id="scp-plan" type="button" onclick="scSub('plan')" class="sub-pill on">🎓 Voti, didUP & Timer</button>
+      <button id="scp-quiz" type="button" onclick="scSub('quiz')" class="sub-pill">🎤 Interrogazione AI</button>
+      <button id="scp-photo" type="button" onclick="scSub('photo')" class="sub-pill">📸 Foto Compito</button>
+    </div>
+
+    <div id="sc-plan" class="space-y-3">
+      <!-- POMODORO TIMER STUDIO -->
+      <div class="card rounded-2xl p-3.5 flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <div class="mono text-[9px] text-amber-300 font-bold">⏱ TIMER STUDIO (POMODORO)</div>
+          <div id="pomDisplay" class="disp text-xl font-bold text-cyan-300 leading-tight">25:00</div>
+          <div id="pomMode" class="mono text-[9px] text-slate-400">25m studio · 5m pausa</div>
+        </div>
+        <div class="flex gap-1.5 shrink-0">
+          <button id="pomBtn" type="button" onclick="pomToggle()" class="px-3 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">▶ Avvia</button>
+          <button type="button" onclick="pomReset(25)" class="px-2.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs">25m</button>
+          <button type="button" onclick="pomReset(5)" class="px-2.5 py-2 rounded-xl bg-slate-800 text-amber-200 text-xs">5m</button>
+        </div>
+      </div>
+
+      <!-- REGISTRO VOTI + IMPORTA SCREENSHOT -->
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <div class="flex justify-between items-center gap-2">
+          <h3 class="disp text-xs font-bold text-cyan-400">🎓 REGISTRO VOTI</h3>
+          <span id="gradesSummary" class="mono text-[10px] text-emerald-300"></span>
+        </div>
+        <label for="gradesImgFile" class="block w-full py-2.5 px-3 rounded-xl bg-cyan-500/15 border border-cyan-400/50 text-cyan-200 text-xs text-center font-bold">📷 Importa Voti da Screenshot (materia, voto, data)</label>
+        <input id="gradesImgFile" type="file" accept="image/*" multiple class="hidden" onchange="importGradesImg(event)" />
+        <p id="gradesImgStatus" class="hidden mono text-[10px] text-cyan-300 text-center bg-slate-950/80 p-2 rounded-xl border border-cyan-500/20"></p>
+
+        <div id="subjAverages" class="flex flex-wrap gap-1.5"></div>
+
+        <!-- CHE VOTO MI SERVE? -->
+        <div class="bg-slate-950/75 border border-cyan-500/20 rounded-xl p-2.5 space-y-1.5">
+          <div class="mono text-[9px] text-amber-300 font-bold">🎯 CHE VOTO MI SERVE PER ARRIVARE ALLA MEDIA?</div>
+          <div class="flex gap-2">
+            <select id="tgSubj" onchange="calcNeededGrade()" class="inp flex-1 mono"></select>
+            <input id="tgVal" type="number" step="0.1" min="5" max="10" value="7.5" oninput="calcNeededGrade()" class="inp w-20 mono" placeholder="Media" />
+          </div>
+          <div id="tgOut" class="text-[11px] text-slate-200"></div>
+        </div>
+
+        <form onsubmit="addGrade(event)" class="flex flex-wrap gap-2">
+          <input id="gSubj" type="text" required placeholder="Materia (es: Fisica)" class="inp flex-1" />
+          <input id="gVal" type="number" step="0.25" min="1" max="10" required placeholder="Voto" class="inp w-20 mono" />
+          <input id="gDate" type="date" class="inp mono text-cyan-200" />
+          <button type="submit" class="px-3 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Voto</button>
+        </form>
+        <div id="gradesList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+      </div>
+
+      <!-- DIDUP & PIANO STUDIO -->
+      <div class="card rounded-2xl p-4 space-y-3">
+        <h2 class="disp text-sm font-bold text-cyan-400">DIDUP & PIANO STUDIO</h2>
+        <label for="didupFile" class="block w-full py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs text-center font-medium">📷 Importa verifiche/compiti da screenshot didUP</label>
+        <input id="didupFile" type="file" accept="image/*" multiple class="hidden" onchange="importDidup(event)" />
+        <p id="didupStatus" class="hidden mono text-[10px] text-cyan-300 text-center bg-slate-950/80 p-2 rounded-xl border border-cyan-500/20"></p>
+        <form onsubmit="generateStudyPlan(event)" class="space-y-2 pt-2 border-t border-cyan-500/20">
+          <label class="lbl">GENERA PIANO DI RIPASSO A RITROSO</label>
+          <div class="flex flex-wrap gap-2">
+            <input id="stSubj" type="text" required placeholder="Materia & argomento verifica..." class="inp flex-1" />
+            <input id="stDate" type="date" required class="inp mono" />
+            <button type="submit" class="px-3.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Genera</button>
+          </div>
+        </form>
+        <div id="stOut" class="hidden card amber rounded-2xl p-3 text-xs whitespace-pre-line space-y-2"></div>
+        <button id="stAddBtn" type="button" onclick="addStudyPlanToAgenda()" class="hidden w-full py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">📅 Inserisci Sessioni di Ripasso in Agenda</button>
+      </div>
+    </div>
+
+    <div id="sc-quiz" class="hidden card rounded-2xl p-4 space-y-3">
+      <h2 class="disp text-sm font-bold text-cyan-400">🎤 INTERROGAZIONE & QUIZ (3 DOMANDE)</h2>
+      <div class="flex flex-wrap gap-2">
+        <input id="qSubj" type="text" placeholder="Materia (es: Storia, Fisica)" class="inp w-36" />
+        <input id="qTopic" type="text" placeholder="Argomento (es: Rivoluzione Francese)" class="inp flex-1" />
+        <button type="button" onclick="startQuiz()" class="px-3.5 py-2 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">Inizia</button>
+      </div>
+      <div class="flex justify-between mono text-[10px] text-cyan-300"><span id="qState">Pronto per interrogare Andrea</span><span id="qScore"></span></div>
+      <div id="qChat" class="space-y-2 max-h-64 overflow-y-auto bg-slate-950/75 p-3 rounded-xl border border-cyan-500/20 text-xs"></div>
+      <form onsubmit="sendQuizAnswer(event)" class="flex gap-2">
+        <input id="qAns" type="text" placeholder="Scrivi o detta la risposta..." class="inp flex-1" />
+        <button type="submit" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Invia</button>
+      </form>
+    </div>
+
+    <div id="sc-photo" class="hidden card rounded-2xl p-4 space-y-3">
+      <h2 class="disp text-sm font-bold text-cyan-400">📸 TUTOR COMPITO PASSO-PASSO</h2>
+      <p class="text-xs text-slate-400">Scatta la foto all'esercizio: Jarvis guida Andrea passo dopo passo senza dare subito il risultato finale.</p>
+      <input id="hwSubj" type="text" placeholder="Materia o nota (es: Matematica, derivate)" class="inp w-full" />
+      <label for="hwFile" class="block w-full py-3 rounded-xl bg-cyan-500/15 border border-cyan-400/50 text-cyan-200 text-xs text-center font-bold">📷 Scatta o scegli foto del compito</label>
+      <input id="hwFile" type="file" accept="image/*" class="hidden" onchange="explainHomeworkPhoto(event)" />
+      <div id="hwOut" class="hidden card amber rounded-2xl p-3 text-xs whitespace-pre-line leading-relaxed"></div>
+      <button id="hwQuizBtn" type="button" onclick="quizFromHomework()" class="hidden w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">🎯 Verifica se ho capito (Mini-Quiz 3 domande)</button>
+    </div>
+  </section>
+
+  <!-- TAB HUB -->
+  <section id="tab-hub" class="hidden space-y-3">
+    <div class="flex gap-1.5 overflow-x-auto pb-1">
+      <button id="hbp-comm" type="button" onclick="hbSub('comm')" class="sub-pill on">✉️ Email & Modelli</button>
+      <button id="hbp-mem" type="button" onclick="hbSub('mem')" class="sub-pill">🧠 Memoria & Regole</button>
+      <button id="hbp-backup" type="button" onclick="hbSub('backup')" class="sub-pill">💾 Backup JSON</button>
+    </div>
+
+    <div id="hb-comm" class="space-y-3">
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <h2 class="disp text-sm font-bold text-cyan-400">✉️ RISPOSTA EMAIL PRONTA</h2>
+        <textarea id="emIn" rows="3" placeholder="Incolla qui l'email o messaggio ricevuto..." class="inp-dark text-xs"></textarea>
+        <div class="flex gap-2">
+          <select id="emTone" class="inp flex-1 mono"><option value="formale">Tono: Formale</option><option value="amichevole">Tono: Amichevole</option><option value="breve">Tono: Breve & Diretto</option></select>
+          <button type="button" onclick="draftEmailReply()" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Scrivi Risposta</button>
+        </div>
+        <div id="emOut" class="hidden bg-slate-950/85 border border-cyan-500/25 rounded-xl p-3 text-xs whitespace-pre-line"></div>
+        <div id="emBtns" class="hidden flex gap-2">
+          <button type="button" onclick="copyText($('emOut').textContent)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs">📋 Copia</button>
+          <button type="button" onclick="openWhatsApp($('emOut').textContent)" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 text-xs">💬 WhatsApp</button>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <h2 class="disp text-sm font-bold text-amber-300">📄 RIASSUNTO TESTI LUNGHI</h2>
+        <textarea id="sumIn" rows="3" placeholder="Incolla un testo lungo, circolare o documento..." class="inp-dark text-xs"></textarea>
+        <button type="button" onclick="summarizeLongText()" class="w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">Estrai Punti Chiave & Azioni</button>
+        <div id="sumOut" class="hidden bg-slate-950/85 border border-amber-500/30 rounded-xl p-3 text-xs whitespace-pre-line"></div>
+        <button id="sumAgBtn" type="button" onclick="addSummaryActionsToAgenda()" class="hidden w-full py-2 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">📅 Aggiungi Azioni in Agenda</button>
+      </div>
+
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <h2 class="disp text-sm font-bold text-cyan-400">⚡ MODELLI DI MESSAGGIO</h2>
+        <form onsubmit="addTemplate(event)" class="space-y-2">
+          <div class="flex gap-2"><input id="tplKey" type="text" required placeholder="Parola chiave (es: ritardo)" class="inp w-36 mono" /><input id="tplText" type="text" required placeholder="Testo completo del messaggio..." class="inp flex-1" /><button type="submit" class="px-3 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+</button></div>
+        </form>
+        <div id="tplList" class="space-y-1.5"></div>
+      </div>
+    </div>
+
+    <div id="hb-mem" class="hidden card rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="disp text-sm font-bold text-cyan-400">MEMORIA ORDINATA & REGOLE</h2>
+        <button type="button" onclick="weeklyMemoryCleanup()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 mono text-[10px]">🧹 Pulizia AI</button>
+      </div>
+      <div id="memReviewBox" class="hidden card amber rounded-xl p-3 space-y-2 text-xs">
+        <div id="memReviewOut" class="whitespace-pre-line"></div>
+        <button type="button" onclick="applyCleanedMemory()" class="px-3 py-1.5 rounded-lg bg-emerald-400 text-slate-950 font-bold text-xs">✅ Applica Pulizia</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div><label class="lbl">💰 MEMORIA SOLDI</label><textarea id="memFinance" rows="3" class="inp-dark mono text-xs"></textarea></div>
+        <div><label class="lbl">🎓 MEMORIA SCUOLA</label><textarea id="memSchool" rows="3" class="inp-dark mono text-xs"></textarea></div>
+        <div><label class="lbl">📈 MEMORIA TRADING</label><textarea id="memTrading" rows="3" class="inp-dark mono text-xs"></textarea></div>
+        <div><label class="lbl">🍸 GUSTI & TEMPO LIBERO</label><textarea id="memTastes" rows="3" class="inp-dark mono text-xs"></textarea></div>
+      </div>
+      <label class="lbl">🧠 MEMORIA GENERALE & LINK SALVATI</label><textarea id="memory" rows="4" class="inp-dark mono text-xs text-cyan-50"></textarea>
+      <label class="lbl">⚙ REGOLE E STILE DI JARVIS</label><textarea id="playbook" rows="5" class="inp-dark mono text-xs text-cyan-50"></textarea>
+      <div class="grid grid-cols-2 gap-2"><button type="button" onclick="savePlaybook()" class="py-3 rounded-xl bg-cyan-400 text-slate-950 disp font-bold text-xs uppercase">Salva Tutto</button><button type="button" onclick="resetPlaybook()" class="py-3 rounded-xl border border-cyan-500/40 text-cyan-300 disp font-bold text-xs uppercase">Ripristina Regole</button></div>
+    </div>
+
+    <div id="hb-backup" class="hidden card rounded-2xl p-4 space-y-3">
+      <h2 class="disp text-sm font-bold text-cyan-400">💾 BACKUP & ESPORTAZIONE DATI</h2>
+      <p class="text-xs text-slate-400">Scarica una copia locale di tutta la tua memoria, agenda, journal, spese, voti e obiettivi oppure ripristinala su un nuovo dispositivo.</p>
+      <button type="button" onclick="exportBackupJson()" class="w-full py-3 rounded-xl bg-cyan-400 text-slate-950 disp font-bold text-xs uppercase">⬇ Esporta Backup (.json)</button>
+      <label for="backupFile" class="block w-full py-3 rounded-xl border border-emerald-400/50 bg-emerald-500/15 text-emerald-200 text-center disp font-bold text-xs uppercase">⬆ Ripristina da File (.json)</label>
+      <input id="backupFile" type="file" accept=".json,application/json" class="hidden" onchange="importBackupJson(event)" />
+    </div>
+  </section>
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="px-1.5 pt-1.5 border-t border-cyan-500/25 bg-slate-950/95 backdrop-blur-md shrink-0" style="padding-bottom:max(10px,env(safe-area-inset-bottom))">
+  <div class="max-w-2xl mx-auto grid grid-cols-6 gap-1">
+    <button id="nav-core" type="button" onclick="tab('core')" class="tab-btn on py-1.5 rounded-xl mono text-[8.5px]"><div>🏠</div>CORE</button>
+    <button id="nav-trading" type="button" onclick="tab('trading')" class="tab-btn py-1.5 rounded-xl mono text-[8.5px]"><div>📈</div>TRADE</button>
+    <button id="nav-money" type="button" onclick="tab('money')" class="tab-btn py-1.5 rounded-xl mono text-[8.5px]"><div>💰</div>SOLDI</button>
+    <button id="nav-agenda" type="button" onclick="tab('agenda')" class="tab-btn py-1.5 rounded-xl mono text-[8.5px]"><div>📅</div>AGENDA</button>
+    <button id="nav-school" type="button" onclick="tab('school')" class="tab-btn py-1.5 rounded-xl mono text-[8.5px]"><div>🎓</div>SCUOLA</button>
+    <button id="nav-hub" type="button" onclick="tab('hub')" class="tab-btn py-1.5 rounded-xl mono text-[8.5px]"><div>🧩</div>HUB</button>
+  </div>
+</nav>
+
+<!-- SETTINGS MODAL -->
+<div id="settings" class="hidden fixed inset-0 bg-slate-950/85 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div class="card rounded-3xl p-5 max-w-sm w-full space-y-3 max-h-[90dvh] overflow-y-auto">
+    <div class="flex justify-between border-b border-cyan-500/20 pb-2"><h3 class="disp text-xs font-bold text-cyan-400">IMPOSTAZIONI, DRIVE & PUSH</h3><button type="button" onclick="closeSettings()" class="text-slate-400 p-1">✕</button></div>
+    <div><label class="lbl">Chiave API Gemini (salvata su Drive)</label><input id="apiKey" type="password" placeholder="Incolla qui la chiave..." class="inp w-full mono" /></div>
+    <div><label class="lbl">Modello Gemini</label><select id="modelSelect" class="inp w-full mono text-cyan-300"><option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Quota Alta)</option><option value="gemini-3.8-flash">gemini-3.8-flash (Avanzato)</option></select></div>
+    <div><label class="lbl">URL Database Google Drive (/exec)</label><input id="driveUrl" type="url" class="inp w-full mono" /></div>
+    <div class="p-3 rounded-xl bg-slate-900/90 border border-cyan-500/20 space-y-2">
+      <div class="flex justify-between items-center"><span class="mono text-[10px] text-amber-300 font-bold">📲 NOTIFICHE PUSH (SCHERMO SPENTO)</span><button type="button" onclick="testPushNotif()" class="px-2 py-1 rounded bg-amber-400 text-slate-950 font-bold text-[10px]">Test</button></div>
+      <input id="ntfyTopic" type="text" placeholder="Canale ntfy segreto (es: jarvis_andrea_2009)" class="inp w-full mono text-xs" />
+      <input id="tgToken" type="password" placeholder="Opzionale: Bot Token Telegram" class="inp w-full mono text-xs" />
+      <input id="tgChatId" type="text" placeholder="Opzionale: Chat ID Telegram" class="inp w-full mono text-xs" />
+    </div>
+    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-cyan-500/20"><div class="text-xs text-white">Risposte vocali</div><button id="ttsBtn" type="button" onclick="toggleTTS()" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs">ATTIVE</button></div>
+    <div class="grid grid-cols-2 gap-2"><button type="button" onclick="pullFromDrive(true)" class="py-2 rounded-xl border border-cyan-500/40 text-cyan-300 font-bold text-[11px]">Sincronizza Drive</button><button type="button" onclick="manualDriveSave()" class="py-2 rounded-xl border border-emerald-500/40 text-emerald-300 font-bold text-[11px]">Salva su Drive</button></div>
+    <button type="button" onclick="saveSettings()" class="w-full py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Salva e chiudi</button>
+  </div>
+</div>
+
+<script>
+const FALLBACK_PIN="2009";
+const DEFAULT_DRIVE_URL="https://script.google.com/macros/s/AKfycbwpwBal8zziUuN5wGabEbOUBAxRF-LUhKWF7qEq3h_MmDku_GCuvGUktCYAf4051ZB5/exec";
+const mem={},store={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+const $=id=>document.getElementById(id),inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+const VALID_CATS=["PERSONALE","LAVORO","SCUOLA","CASA","TRADING","SALUTE"],EXP_CATS=["Cibo","Uscite","Trasporti","Abbonamenti","Scuola","Shopping","Altro"];
+const MONTHS_IT=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const DOW_CODES=["SUN","MON","TUE","WED","THU","FRI","SAT"],DOW_NAMES={SUN:"Domenica",MON:"Lunedì",TUE:"Martedì",WED:"Mercoledì",THU:"Giovedì",FRI:"Venerdì",SAT:"Sabato"};
+const SCHOOL_TIMETABLE={MON:"1ª Italiano e Latino (Busso) · 2ª Italiano e Latino (Busso) · 3ª Fisica (Capacci) · 4ª Matematica (Casoli) · 5ª Inglese (Perazzini)",TUE:"1ª Disegno e St. Arte (Giardino) · 2ª Inglese Madrelingua · 3ª Italiano e Latino (Busso) · 4ª Storia e Filosofia (Neri) · 5ª Storia e Filosofia (Neri)",WED:"1ª Religione (Borghi) · 2ª Matematica (Casoli) · 3ª Matematica (Casoli) · 4ª Storia e Filosofia (Neri) · 5ª Storia e Filosofia (Neri) · 6ª Inglese Compresenza",THU:"1ª Inglese (Perazzini) · 2ª Italiano e Latino (Busso) · 3ª Italiano e Latino (Busso) · 4ª Fisica (Capacci) · 5ª Storia e Filosofia (Neri)",FRI:"1ª Fisica (Capacci) · 2ª Matematica (Casoli) · 3ª Scienze (Macchini) · 4ª Italiano e Latino (Busso) · 5ª Italiano e Latino (Busso)",SAT:"1ª Scienze (Macchini) · 2ª Scienze (Macchini) · 3ª Disegno e St. Arte (Giardino) · 4ª Sc. Motorie (Mazzoli) · 5ª Sc. Motorie (Mazzoli)",SUN:""};
+const FIXED_RAW="MON|07:55|SCUOLA|Scuola (Liceo Scientifico);TUE|07:55|SCUOLA|Scuola (7:55-13:00);TUE|15:00|SCUOLA|Compiti (15:00-17:00);TUE|17:30|SALUTE|Calcio (17:30-19:30);WED|07:55|SCUOLA|Scuola (6 ore con Compresenza);WED|15:00|TRADING|Trading (15:00-16:30);WED|17:00|SCUOLA|Compiti (17:00-19:00);THU|07:55|SCUOLA|Scuola (7:55-12:55);THU|17:30|SALUTE|Calcio (17:30-19:30);FRI|07:55|SCUOLA|Scuola (7:55-12:55);FRI|15:00|TRADING|Trading (15:00-16:00);FRI|16:00|SCUOLA|Studio;SAT|07:55|SCUOLA|Scuola (7:55-12:55);SAT|14:00|SALUTE|Convocazione partita;SAT|15:00|SALUTE|Partita (15:00-17:00)";
+const TV_MAP={XAUUSD:"OANDA:XAUUSD",EURUSD:"FX:EURUSD",GBPUSD:"FX:GBPUSD",USDJPY:"FX:USDJPY",BTCUSD:"BITSTAMP:BTCUSD",NAS100:"PEPPERSTONE:NAS100"},TV_INT={"5m":"5","15m":"15","1h":"60","4h":"240","1d":"D"};
+const CHK_ITEMS=["Trend H4 / M15 allineato","Livello chiave o liquidità pulita","Controllato Calendario Econ. / News","Risk/Reward almeno 1:2","Rischio max 1% del conto","Stato mentale calmo (no FOMO)"];
+const DEFAULT_TPL=[{id:201,key:"ritardo",text:"Ciao, faccio qualche minuto di ritardo, arrivo subito!"},{id:202,key:"ok",text:"Perfetto, confermato per quell'orario. A dopo!"}];
+const DEFAULT_PLAYBOOK=`Sei J.A.R.V.I.S., assistente personale intelligente.\n- Chiama l'utente "Signore". Per compiti scolastici guida "Andrea" passo-passo senza dare subito il risultato finale.\n- Rispondi in italiano, breve e chiaro.\n- Agenda intelligente: scegli sempre gli slot liberi considerando scuola e impegni.\n- Trading: valuta confluenza H4+M15, sii oggettivo tra COMPRA e VENDI (o ASPETTA), indica Entry, TP, SL e R/R. Non è consulenza finanziaria.`;
+
+let S={
+  memory:"",memSections:{trading:"",school:"",finance:"",tastes:""},tts:true,listening:false,
+  tasks:[],charts:[],journal:[],expenses:[],grades:[],habits:[],lists:[],goals:[],templates:[...DEFAULT_TPL],
+  budgets:{Cibo:150,Uscite:120},savingsGoal:{title:"",target:0,saved:0,deadline:""},targetGrade:7.5,
+  tradingCfg:{bal:1000,risk:1},pushCfg:{ntfyTopic:"",tgToken:"",tgChatId:""},
+  deletedIds:[],deletedTasks:[],deletedCharts:[],deletedJournal:[],
+  playbook:DEFAULT_PLAYBOOK,history:[],key:"",model:"gemini-3.5-flash-lite",driveUrl:DEFAULT_DRIVE_URL,pin:"",driveLoaded:false,lastUpdatedAt:""
+};
+let rec=null,currentChartText="",currentJText="",chartTimer=null,isPulling=false,tvLoaded=false,econCache=[];
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),selectedDate="",jYear=calYear,jMonth=calMonth,selectedJDate="ALL";
+let chkState=[false,false,false,false,false,false],csvParsedRows=[],studyPlanTasks=[],summaryActionTasks=[],cleanedMemDraft="",notifiedKeys={};
+let quiz={active:false,subj:"",topic:"",step:0,history:[]},lastHomeworkSummary="";
+let pom={sec:1500,running:false,iv:null,mode:25};
+
+function isoOffset(d){const n=new Date();n.setDate(n.getDate()+d);return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`}
+const todayISO=()=>isoOffset(0),tomorrowISO=()=>isoOffset(1);
+function dowFromISO(iso){if(!iso||iso==='ALL')return"";const p=iso.split('-');return DOW_CODES[new Date(+p[0],+p[1]-1,+p[2],12,0,0).getDay()]}
+function isDeleted(id){return S.deletedIds.includes(id)||S.deletedTasks.includes(id)||S.deletedCharts.includes(id)||S.deletedJournal.includes(id)}
+function markDeleted(type,id){
+  if(!S.deletedIds.includes(id))S.deletedIds.push(id);
+  if(type==='task'&&!S.deletedTasks.includes(id))S.deletedTasks.push(id);
+  if(type==='chart'&&!S.deletedCharts.includes(id))S.deletedCharts.push(id);
+  if(type==='journal'&&!S.deletedJournal.includes(id))S.deletedJournal.push(id);
+}
+function ensureWeeklyFixed(){if(!S.tasks.some(t=>t.repeat)){S.tasks=[...S.tasks,...FIXED_RAW.split(';').map((s,i)=>{const[r,tm,c,ti]=s.split('|');return{id:101+i,date:"",repeat:r,time:tm,category:c,title:ti,done:false,doneDates:[]}}).filter(x=>!isDeleted(x.id))];sortTasks();return true}return false}
+
+function init(){
+  tick();setInterval(tick,1000);setInterval(()=>{renderDash();checkDueNotifications()},30000);
+  selectedDate=todayISO();
+  const ld=(k,d)=>{const v=store.get(k);if(v)try{return JSON.parse(v)}catch(e){}return d};
+  S.tasks=ld('jarvis_tasks_openai_v2',[]);S.charts=ld('jarvis_charts_v1',[]);S.journal=ld('jarvis_journal_v1',[]);
+  S.expenses=ld('jarvis_expenses_v1',[]);S.grades=ld('jarvis_grades_v1',[]);S.habits=ld('jarvis_habits_v1',[]);
+  S.lists=ld('jarvis_lists_v1',[]);S.goals=ld('jarvis_goals_v1',[]);S.templates=ld('jarvis_tpl_v1',DEFAULT_TPL);
+  S.budgets=ld('jarvis_budgets_v1',{Cibo:150,Uscite:120});S.savingsGoal=ld('jarvis_sav_v1',{title:"",target:0,saved:0,deadline:""});
+  S.memSections=ld('jarvis_memsec_v1',{trading:"",school:"",finance:"",tastes:""});
+  S.tradingCfg=ld('jarvis_trcfg_v1',{bal:1000,risk:1});S.pushCfg=ld('jarvis_pushcfg_v1',{ntfyTopic:"",tgToken:"",tgChatId:""});
+  S.deletedIds=ld('jarvis_del_ids_v1',[]);S.deletedTasks=ld('jarvis_del_tasks_v1',[]);S.deletedCharts=ld('jarvis_del_charts_v1',[]);S.deletedJournal=ld('jarvis_del_journal_v1',[]);
+  S.history=ld('jarvis_history_v1',[]);ensureWeeklyFixed();
+  S.playbook=store.get('jarvis_playbook_openai_v2')||DEFAULT_PLAYBOOK;S.key=store.get('jarvis_gemini_key_v1')||"";
+  S.model=store.get('jarvis_gemini_model_v1')||"gemini-3.5-flash-lite";
+  S.memory=store.get('jarvis_memory_openai_v2')||"";S.driveUrl=store.get('jarvis_drive_url_v1')||DEFAULT_DRIVE_URL;
+  S.tts=store.get('jarvis_tts_v1')!=='0';
+  $('tDate').value=selectedDate;$('jDate').value=selectedDate;$('gDate').value=selectedDate;$('stDate').value=isoOffset(5);$('savDate').value=isoOffset(90);
+  syncInputs();renderAll();updateStatus();setDriveBadge(S.driveUrl?"pronto":"locale");
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR&&!inFrame){$('badge').textContent="VOCE DIRETTA";$('micHint').textContent="Tocca il reattore e parla."}else{$('badge').textContent="DETTATURA SIRI";$('micHint').textContent="Tocca il reattore per scrivere o dettare con 🎙."}
+  try{speechSynthesis.getVoices()}catch(e){}
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.driveLoaded)pullFromDrive(false)});
+  window.addEventListener('focus',()=>{if(S.driveLoaded)pullFromDrive(false)});
+  setInterval(()=>{if(!document.hidden&&S.driveLoaded)pullFromDrive(false)},45000);
+}
+
+function renderAll(){renderDash();renderAgenda();renderJournal();renderChartsHistory();renderChecklist();calcLots();renderMoney();renderGoals();renderHabitsLists();renderGrades();renderTemplates()}
+
+function initTV(){
+  const box=$('tvBox');if(!box)return;
+  const sym=TV_MAP[$('trSym').value]||"OANDA:XAUUSD",tf=TV_INT[$('trTf').value]||"15";
+  box.innerHTML='<div class="tradingview-widget-container" style="height:330px;width:100%"><div class="tradingview-widget-container__widget" style="height:330px;width:100%"></div></div>';
+  const s=document.createElement('script');s.type='text/javascript';s.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';s.async=true;
+  s.appendChild(document.createTextNode(JSON.stringify({autosize:true,symbol:sym,interval:tf,timezone:"Europe/Rome",theme:"dark",style:"1",locale:"it",allow_symbol_change:true,studies:["STD;EMA","STD;RSI"],support_host:"https://www.tradingview.com"})));
+  box.firstChild.appendChild(s);tvLoaded=true;
+}
+
+function syncInputs(){
+  $('memory').value=S.memory;$('memTrading').value=S.memSections.trading||"";$('memSchool').value=S.memSections.school||"";
+  $('memFinance').value=S.memSections.finance||"";$('memTastes').value=S.memSections.tastes||"";
+  $('playbook').value=S.playbook;$('apiKey').value=S.key;$('modelSelect').value=S.model;$('driveUrl').value=S.driveUrl;
+  $('lotBal').value=S.tradingCfg.bal||1000;$('lotRisk').value=S.tradingCfg.risk||1;
+  $('ntfyTopic').value=S.pushCfg.ntfyTopic||"";$('tgToken').value=S.pushCfg.tgToken||"";$('tgChatId').value=S.pushCfg.tgChatId||"";
+  $('savTitle').value=S.savingsGoal.title||"";$('savTarget').value=S.savingsGoal.target||"";$('savSaved').value=S.savingsGoal.saved||"";if(S.savingsGoal.deadline)$('savDate').value=S.savingsGoal.deadline;
+  $('ttsBtn').textContent=S.tts?"ATTIVE":"SPENTE";$('ttsBtn').className="px-3 py-1.5 rounded-lg font-bold text-xs "+(S.tts?"bg-cyan-500 text-slate-950":"bg-slate-700 text-slate-300");
+  $('keyBanner').classList.toggle('hidden',!!S.key);
+}
+function tick(){const n=new Date();$('clock').textContent=n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});$('date').textContent=n.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}
+function updateStatus(){const m=S.model.toUpperCase();$('status').textContent=S.key?`GEMINI (${m}) // ONLINE`:"CHIAVE GEMINI MANCANTE";$('engine').textContent=S.key?`CORE: ${m}`:"CORE: INSERISCI CHIAVE";$('keyBanner').classList.toggle('hidden',!!S.key)}
+function setDriveBadge(s){const el=$('driveBadge'),m={ok:["☁ DRIVE OK","bg-emerald-500/15 text-emerald-300 border-emerald-500/40"],saving:["☁ SYNC...","bg-amber-500/15 text-amber-300 border-amber-500/40"],err:["☁ ERRORE","bg-rose-500/15 text-rose-300 border-rose-500/40"],pronto:["☁ DRIVE","bg-cyan-500/15 text-cyan-300 border-cyan-500/40"]};const[t,c]=m[s]||["LOCALE","bg-slate-800 text-slate-400 border-slate-700"];el.textContent=t;el.className="px-1.5 py-0.5 rounded mono text-[9px] border "+c}
+
+function fileToJpegBase64(file,maxPx=1000){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();r.onerror=()=>rej(new Error("Errore foto"));
+    r.onload=ev=>{const du=String(ev.target.result||""),img=new Image();img.onerror=()=>{const m=du.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);if(m)res({mime:m[1],data:m[2]});else rej(new Error("Formato non supportato"))};img.onload=()=>{let w=img.width,h=img.height;if(w>maxPx||h>maxPx){if(w>=h){h=Math.round(h*maxPx/w);w=maxPx}else{w=Math.round(w*maxPx/h);h=maxPx}}const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);res({mime:'image/jpeg',data:cv.toDataURL('image/jpeg',0.76).split(',')[1]})};img.src=du};
+    r.readAsDataURL(file);
+  });
+}
+
+function openExternal(u){const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';document.body.appendChild(a);a.click();a.remove()}
+function openWhatsApp(t){openExternal('https://wa.me/?text='+encodeURIComponent(String(t||"").trim()))}
+async function shareText(t){if(!t)return;if(navigator.share){try{await navigator.share({title:'J.A.R.V.I.S.',text:t});return}catch(e){}}openWhatsApp(t)}
+async function copyText(t){try{await navigator.clipboard.writeText(t);speak("Copiato.",true)}catch(e){alert("Testo pronto per copia.")}}
+function addToAppleCal(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;const dStr=(t.date||(selectedDate!=='ALL'?selectedDate:todayISO())).replace(/-/g,''),[hh,mm]=(t.time||'09:00').split(':').map(Number),pad=n=>String(n).padStart(2,'0'),start=`${dStr}T${pad(hh)}${pad(mm)}00`,end=hh>=23?`${dStr}T235900`:`${dStr}T${pad(hh+1)}${pad(mm)}00`,ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//JARVIS//IT\r\nBEGIN:VEVENT\r\nUID:${t.id}@jarvis\r\nDTSTAMP:${dStr}T000000Z\r\nDTSTART:${start}\r\nDTEND:${end}\r\nSUMMARY:${t.title.replace(/[\r\n,;\\]/g,' ')}\r\nBEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\nDESCRIPTION:J.A.R.V.I.S.\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR`,b=URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));openExternal(b);setTimeout(()=>URL.revokeObjectURL(b),15000)}
+function runShortcut(n,inp=""){let u='shortcuts://run-shortcut?name='+encodeURIComponent(n);if(inp)u+='&input=text&text='+encodeURIComponent(inp);openExternal(u)}
+
+async function driveRequest(action,pin,data){const r=await fetch(S.driveUrl,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,pin,data})});const t=await r.text();try{return JSON.parse(t)}catch(e){throw new Error("Risposta non valida Apps Script")}}
+function exportState(){return{tasks:S.tasks,charts:S.charts.slice(0,15),journal:S.journal,expenses:S.expenses,grades:S.grades,habits:S.habits,lists:S.lists,goals:S.goals,templates:S.templates,budgets:S.budgets,savingsGoal:S.savingsGoal,targetGrade:S.targetGrade,tradingCfg:S.tradingCfg,pushCfg:S.pushCfg,memSections:S.memSections,deletedIds:S.deletedIds.slice(-200),deletedTasks:S.deletedTasks.slice(-80),deletedCharts:S.deletedCharts.slice(-80),deletedJournal:S.deletedJournal.slice(-80),memory:S.memory,playbook:S.playbook,history:S.history.slice(-50),geminiKey:S.key,model:S.model,tts:S.tts,updatedAt:new Date().toISOString()}}
+function hasRemoteContent(d){return d&&typeof d==='object'&&((Array.isArray(d.tasks)&&d.tasks.length>0)||(Array.isArray(d.journal)&&d.journal.length>0)||(Array.isArray(d.expenses)&&d.expenses.length>0)||(Array.isArray(d.grades)&&d.grades.length>0)||(typeof d.memory==='string'&&d.memory.trim().length>0)||(typeof d.geminiKey==='string'&&d.geminiKey.trim().length>0))}
+function applyRemoteState(d){
+  if(!d||typeof d!=='object')return;
+  if(Array.isArray(d.deletedIds))S.deletedIds=[...new Set([...S.deletedIds,...d.deletedIds])].slice(-200);
+  if(Array.isArray(d.deletedTasks))S.deletedTasks=[...new Set([...S.deletedTasks,...d.deletedTasks])].slice(-80);
+  if(Array.isArray(d.deletedCharts))S.deletedCharts=[...new Set([...S.deletedCharts,...d.deletedCharts])].slice(-80);
+  if(Array.isArray(d.deletedJournal))S.deletedJournal=[...new Set([...S.deletedJournal,...d.deletedJournal])].slice(-80);
+  if(Array.isArray(d.tasks))S.tasks=d.tasks.filter(t=>!isDeleted(t.id));
+  if(Array.isArray(d.charts))S.charts=d.charts.filter(c=>!isDeleted(c.id));
+  if(Array.isArray(d.journal))S.journal=d.journal.filter(j=>!isDeleted(j.id));
+  if(Array.isArray(d.expenses))S.expenses=d.expenses.filter(x=>!isDeleted(x.id));
+  if(Array.isArray(d.grades))S.grades=d.grades.filter(g=>!isDeleted(g.id));
+  if(Array.isArray(d.habits))S.habits=d.habits.filter(h=>!isDeleted(h.id));
+  if(Array.isArray(d.lists))S.lists=d.lists.filter(l=>!isDeleted(l.id));
+  if(Array.isArray(d.goals))S.goals=d.goals.filter(g=>!isDeleted(g.id));
+  if(Array.isArray(d.templates)&&d.templates.length)S.templates=d.templates.filter(t=>!isDeleted(t.id));
+  if(d.budgets&&typeof d.budgets==='object')S.budgets=d.budgets;
+  if(d.savingsGoal&&typeof d.savingsGoal==='object')S.savingsGoal=d.savingsGoal;
+  if(d.tradingCfg&&typeof d.tradingCfg==='object')S.tradingCfg=d.tradingCfg;
+  if(d.pushCfg&&typeof d.pushCfg==='object')S.pushCfg=d.pushCfg;
+  if(d.memSections&&typeof d.memSections==='object')S.memSections={trading:d.memSections.trading||"",school:d.memSections.school||"",finance:d.memSections.finance||"",tastes:d.memSections.tastes||""};
+  if(typeof d.memory==='string')S.memory=d.memory;if(typeof d.playbook==='string'&&d.playbook.trim())S.playbook=d.playbook;if(Array.isArray(d.history))S.history=d.history;
+  if(typeof d.geminiKey==='string'&&d.geminiKey.trim())S.key=d.geminiKey.trim();
+  if(d.model==='gemini-3.8-flash'||d.model==='gemini-3.5-flash-lite')S.model=d.model;
+  if(typeof d.tts==='boolean')S.tts=d.tts;if(d.updatedAt)S.lastUpdatedAt=d.updatedAt;
+  const added=ensureWeeklyFixed();saveLocalOnly();syncInputs();renderAll();updateStatus();if(added)syncSave();
+}
+function saveLocalOnly(){
+  store.set('jarvis_tasks_openai_v2',JSON.stringify(S.tasks));store.set('jarvis_charts_v1',JSON.stringify(S.charts.slice(0,15)));store.set('jarvis_journal_v1',JSON.stringify(S.journal));
+  store.set('jarvis_expenses_v1',JSON.stringify(S.expenses));store.set('jarvis_grades_v1',JSON.stringify(S.grades));store.set('jarvis_habits_v1',JSON.stringify(S.habits));
+  store.set('jarvis_lists_v1',JSON.stringify(S.lists));store.set('jarvis_goals_v1',JSON.stringify(S.goals));store.set('jarvis_tpl_v1',JSON.stringify(S.templates));
+  store.set('jarvis_budgets_v1',JSON.stringify(S.budgets));store.set('jarvis_sav_v1',JSON.stringify(S.savingsGoal));store.set('jarvis_memsec_v1',JSON.stringify(S.memSections));
+  store.set('jarvis_trcfg_v1',JSON.stringify(S.tradingCfg));store.set('jarvis_pushcfg_v1',JSON.stringify(S.pushCfg));
+  store.set('jarvis_del_ids_v1',JSON.stringify(S.deletedIds.slice(-200)));store.set('jarvis_del_tasks_v1',JSON.stringify(S.deletedTasks.slice(-80)));
+  store.set('jarvis_del_charts_v1',JSON.stringify(S.deletedCharts.slice(-80)));store.set('jarvis_del_journal_v1',JSON.stringify(S.deletedJournal.slice(-80)));
+  store.set('jarvis_memory_openai_v2',S.memory);store.set('jarvis_playbook_openai_v2',S.playbook);store.set('jarvis_history_v1',JSON.stringify(S.history.slice(-50)));
+  store.set('jarvis_gemini_key_v1',S.key);store.set('jarvis_gemini_model_v1',S.model);store.set('jarvis_drive_url_v1',S.driveUrl);store.set('jarvis_tts_v1',S.tts?'1':'0');
+}
+async function syncSave(){saveLocalOnly();renderDash();if(!S.driveUrl||!S.pin)return;setDriveBadge('saving');try{const res=await driveRequest("save",S.pin,exportState());if(res.ok){if(res.savedAt)S.lastUpdatedAt=res.savedAt;if(res.data)applyRemoteState(res.data);setDriveBadge('ok')}else setDriveBadge('err')}catch(e){setDriveBadge('err')}}
+async function pullFromDrive(show=false){if(!S.driveUrl||!S.pin||isPulling){if(show)alert("Inserisci URL Drive e PIN.");return}isPulling=true;if(show)setDriveBadge('saving');try{const res=await driveRequest("load",S.pin);if(res.ok&&res.data){S.driveLoaded=true;if(show||(res.data.updatedAt&&res.data.updatedAt!==S.lastUpdatedAt)){applyRemoteState(res.data);renderChatHistory();if(S.charts.length)showChartEntry(S.charts[0])}setDriveBadge('ok');if(show)alert("Sincronizzato!")}else if(!res.ok){setDriveBadge('err');if(show)alert("Errore: "+(res.error||""))}}catch(e){setDriveBadge('err');if(show)alert("Errore: "+e.message)}finally{isPulling=false}}
+async function manualDriveSave(){S.driveUrl=$('driveUrl').value.trim()||DEFAULT_DRIVE_URL;S.key=$('apiKey').value.trim();S.model=$('modelSelect').value||"gemini-3.5-flash-lite";S.pushCfg={ntfyTopic:$('ntfyTopic').value.trim(),tgToken:$('tgToken').value.trim(),tgChatId:$('tgChatId').value.trim()};saveLocalOnly();setDriveBadge('saving');try{const res=await driveRequest("save",S.pin||FALLBACK_PIN,exportState());if(!res.ok){setDriveBadge('err');return alert("Errore: "+res.error)}S.driveLoaded=true;if(res.savedAt)S.lastUpdatedAt=res.savedAt;setDriveBadge('ok');alert("Salvato su Drive!")}catch(e){setDriveBadge('err');alert("Errore: "+e.message)}}
+async function testPushNotif(){await saveSettings();try{const r=await driveRequest("test_push",S.pin||FALLBACK_PIN);alert(r.ok?"Notifica push inviata! Controlla il telefono.":"Errore: "+r.error)}catch(e){alert("Errore: "+e.message)}}
+
+async function unlock(){
+  const entered=$('pin').value.trim(),msg=$('pinMsg'),btn=$('unlockBtn');msg.classList.add('hidden');
+  if(!S.driveUrl){if(FALLBACK_PIN&&entered===FALLBACK_PIN){S.pin=entered;$('lock').classList.add('hidden');primeAudio();renderChatHistory();speak("Sistema sbloccato, Signore.")}else{msg.textContent="PIN non valido.";msg.classList.remove('hidden')}return}
+  btn.disabled=true;btn.textContent="SINCRONIZZAZIONE DRIVE...";
+  try{const res=await driveRequest("load",entered);if(!res.ok){msg.textContent=res.error||"PIN non valido.";msg.classList.remove('hidden');btn.disabled=false;btn.textContent="Inizializza Sistema";return}S.pin=entered;S.driveLoaded=true;if(!hasRemoteContent(res.data))await driveRequest("save",S.pin,exportState());else applyRemoteState(res.data);setDriveBadge('ok');$('lock').classList.add('hidden');primeAudio();renderChatHistory();if(S.charts.length)showChartEntry(S.charts[0]);speak("Bentornato, Signore.")}
+  catch(err){if(FALLBACK_PIN&&entered===FALLBACK_PIN){S.pin=entered;setDriveBadge('err');$('lock').classList.add('hidden');primeAudio();renderChatHistory();addMsg('jarvis',"⚠️ Drive non raggiungibile.")}else{msg.textContent="Errore: "+err.message;msg.classList.remove('hidden')}}
+  btn.disabled=false;btn.textContent="Inizializza Sistema";
+}
+
+function renderChatHistory(){$('chat').innerHTML='';if(S.history.length)S.history.forEach(i=>{const t=i.parts?.[0]?.text||"";if(t)addMsg(i.role==='user'?'user':'jarvis',t)});else addMsg('jarvis',S.key?"Tutti i moduli v7 online, Signore. Premi ☀️ Mattino per il briefing o chiedi qualsiasi cosa.":"Drive collegato! Inserisci una sola volta la chiave Gemini dal banner giallo sopra.")}
+function tab(n){['core','trading','money','agenda','school','hub'].forEach(t=>{$('tab-'+t).classList.add('hidden');$('nav-'+t).classList.remove('on')});$('tab-'+n).classList.remove('hidden');$('nav-'+n).classList.add('on');if(n==='trading'){if(!tvLoaded)initTV();if(!econCache.length&&S.driveUrl)loadEconCal(false)}if(S.driveLoaded)pullFromDrive(false)}
+function trSub(s){['live','journal','econ'].forEach(x=>{$('tr-'+x).classList.toggle('hidden',x!==s);$('trp-'+x).classList.toggle('on',x===s)});if(s==='econ'&&!econCache.length)loadEconCal(true)}
+function mnSub(s){['expenses','csv','budget'].forEach(x=>{$('mn-'+x).classList.toggle('hidden',x!==s);$('mnp-'+x).classList.toggle('on',x===s)})}
+function agSub(s){['cal','goals','lists'].forEach(x=>{$('ag-'+x).classList.toggle('hidden',x!==s);$('agp-'+x).classList.toggle('on',x===s)})}
+function scSub(s){['plan','quiz','photo'].forEach(x=>{$('sc-'+x).classList.toggle('hidden',x!==s);$('scp-'+x).classList.toggle('on',x===s)})}
+function hbSub(s){['comm','mem','backup'].forEach(x=>{$('hb-'+x).classList.toggle('hidden',x!==s);$('hbp-'+x).classList.toggle('on',x===s)})}
+
+function openSettings(focusKey=false){$('settings').classList.remove('hidden');if(focusKey)setTimeout(()=>$('apiKey').focus(),120)}
+function closeSettings(){$('settings').classList.add('hidden')}
+async function saveSettings(){
+  const nk=$('apiKey').value.trim(),nm=$('modelSelect').value||"gemini-3.5-flash-lite",nd=$('driveUrl').value.trim()||DEFAULT_DRIVE_URL,need=nd&&(!S.driveLoaded||nd!==S.driveUrl);
+  S.key=nk;S.model=nm;S.driveUrl=nd;S.pushCfg={ntfyTopic:$('ntfyTopic').value.trim(),tgToken:$('tgToken').value.trim(),tgChatId:$('tgChatId').value.trim()};
+  updateStatus();closeSettings();
+  if(need){setDriveBadge('saving');try{const res=await driveRequest("load",S.pin||FALLBACK_PIN);if(!res.ok){setDriveBadge('err');addMsg('jarvis',"⚠️ Errore Drive: "+res.error);return}S.driveLoaded=true;if(hasRemoteContent(res.data)){applyRemoteState(res.data);if(nk)S.key=nk;S.model=nm;syncInputs();updateStatus();renderChatHistory();await syncSave();addMsg('jarvis',"Drive collegato e chiave salvata su Drive.");return}}catch(e){setDriveBadge('err');return}}
+  await syncSave();addMsg('jarvis',"Impostazioni salvate su Drive, Signore.");
+}
+function toggleTTS(){S.tts=!S.tts;syncInputs();if(!S.tts)try{speechSynthesis.cancel()}catch(e){}syncSave()}
+function savePlaybook(){S.memory=$('memory').value.trim();S.memSections={trading:$('memTrading').value.trim(),school:$('memSchool').value.trim(),finance:$('memFinance').value.trim(),tastes:$('memTastes').value.trim()};S.playbook=$('playbook').value.trim()||DEFAULT_PLAYBOOK;syncSave();speak("Profilo e memoria salvati.",true)}
+function resetPlaybook(){$('playbook').value=DEFAULT_PLAYBOOK;savePlaybook()}
+function primeAudio(){try{if(!('speechSynthesis'in window))return;const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+function speak(t,f=false){if((!S.tts&&!f)||!('speechSynthesis'in window)||!t)return;try{if(speechSynthesis.speaking)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[*#_`]/g,'').replace(/\n+/g,'. '));u.lang='it-IT';u.rate=1.02;u.pitch=0.95;const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith('it'));if(v)u.voice=v;u.onstart=()=>$('reactor').classList.add('speak');u.onend=u.onerror=()=>$('reactor').classList.remove('speak');speechSynthesis.speak(u)}catch(e){}}
+function toggleMic(){primeAudio();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame)return fallbackDictation();if(S.listening){try{rec.stop()}catch(e){}return}try{if(speechSynthesis.speaking)speechSynthesis.cancel();rec=new SR();rec.lang='it-IT';rec.interimResults=false;rec.maxAlternatives=1;rec.onstart=()=>setListen(true);rec.onend=()=>setListen(false);rec.onresult=e=>{const t=e.results[0][0].transcript;addMsg('user',t);process(t)};rec.onerror=e=>{setListen(false);if(e.error==='not-allowed'||e.error==='service-not-allowed')fallbackDictation()};rec.start()}catch(e){fallbackDictation()}}
+function fallbackDictation(){const i=$('txt');i.scrollIntoView({behavior:'smooth',block:'center'});i.focus();i.classList.add('ring-2','ring-amber-400');setTimeout(()=>i.classList.remove('ring-2','ring-amber-400'),2000)}
+function setListen(on){S.listening=on;$('reactor').classList.toggle('listen',on);$('micLabel').textContent=on?"ASCOLTO":"PARLA"}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function formatRich(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong class="text-cyan-200">$1</strong>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-cyan-300 break-all">$1</a>')}
+function addMsg(who,text,note,waText,alarmData,musicData,tradingMode,remData){
+  const d=document.createElement('div'),nH=note?`<div class="mono text-[10px] text-emerald-300 mt-1.5">${esc(note)}</div>`:'',b=(c,t)=>`<button type="button" class="${c} mt-2 mr-2 px-2.5 py-1.5 rounded-xl border text-[11px] font-medium">${t}</button>`;
+  const btns=(waText?b('wa-ready bg-emerald-500/20 border-emerald-400/50 text-emerald-200','💬 WhatsApp'):'')+(alarmData?b('al-ready bg-amber-500/20 border-amber-400/50 text-amber-200','⏰ Sveglia '+esc(alarmData.time)):'')+(remData?b('rm-ready bg-indigo-500/20 border-indigo-400/50 text-indigo-200','📌 Promemoria iPhone'):'')+(musicData?b('mu-ready bg-fuchsia-500/20 border-fuchsia-400/50 text-fuchsia-200','🎵 '+esc(musicData.label)):'')+(tradingMode?b('tr-ready bg-cyan-500/20 border-cyan-400/50 text-cyan-200','📊 Apri Trading'):'');
+  if(who==='user'){d.className="bg-slate-900/90 border border-slate-700/80 rounded-2xl rounded-tr-sm p-3 ml-6";d.innerHTML=`<div class="mono text-[10px] text-slate-400 text-right mb-1">TU</div><p class="text-white text-xs leading-relaxed whitespace-pre-line">${formatRich(text)}</p>`}
+  else{
+    d.className="bg-cyan-950/45 border border-cyan-500/30 rounded-2xl rounded-tl-sm p-3 mr-4";
+    d.innerHTML=`<div class="flex justify-between items-center mb-1"><span class="mono text-[10px] text-cyan-400">J.A.R.V.I.S.</span><div class="flex gap-2"><button type="button" class="speak-btn text-[11px] text-cyan-300/80">🔊</button><button type="button" class="wa-btn text-[11px] text-emerald-300/80">💬</button><button type="button" class="share-btn text-[11px] text-cyan-300/80">📤</button></div></div><p class="text-slate-100 text-xs leading-relaxed whitespace-pre-line">${formatRich(text)}</p><div class="flex flex-wrap">${btns}</div>${nH}`;
+    d.querySelector('.speak-btn').onclick=()=>speak(text,true);d.querySelector('.wa-btn').onclick=()=>openWhatsApp(text);d.querySelector('.share-btn').onclick=()=>shareText(text);
+    if(waText)d.querySelector('.wa-ready').onclick=()=>openWhatsApp(waText);if(alarmData)d.querySelector('.al-ready').onclick=()=>runShortcut('Jarvis Sveglia',`${alarmData.date} ${alarmData.time}`);if(remData)d.querySelector('.rm-ready').onclick=()=>runShortcut('Jarvis Promemoria',remData);if(musicData)d.querySelector('.mu-ready').onclick=()=>openExternal(musicData.url);if(tradingMode)d.querySelector('.tr-ready').onclick=()=>tab('trading');
+  }
+  $('chat').appendChild(d);$('chat').scrollTop=$('chat').scrollHeight;
+}
+function clearChat(){$('chat').innerHTML='';S.history=[];syncSave();addMsg('jarvis',"Conversazione ripulita, Signore.")}
+function sendText(e){e.preventDefault();primeAudio();const t=$('txt').value.trim();if(!t)return;$('txt').value='';addMsg('user',t);process(t)}
+function quick(t){primeAudio();addMsg('user',t);process(t)}
+
+function isTaskDone(t,iso){return t.repeat?(Array.isArray(t.doneDates)&&iso!=='ALL'&&t.doneDates.includes(iso)):!!t.done}
+function formatDateBadge(iso){if(!iso)return"";const p=iso.split('-');return p.length===3?`${p[2]}/${p[1]}`:iso}
+function tasksForDate(iso){if(iso==='ALL')return S.tasks;const dow=dowFromISO(iso);return S.tasks.filter(t=>t.date===iso||t.repeat==='DAILY'||t.repeat===dow||(!t.date&&!t.repeat))}
+function agendaSummary(){const d=(selectedDate&&selectedDate!=='ALL')?selectedDate:todayISO(),list=tasksForDate(d).filter(t=>!isTaskDone(t,d));if(!list.length)return"Nessun impegno in sospeso per il "+formatDateBadge(d)+".";return`Impegni (${formatDateBadge(d)}): `+list.sort((a,b)=>a.time.localeCompare(b.time)).map(t=>`${t.time} ${t.title}`).join('; ')+"."}
+function journalStats(){const tod=todayISO(),mo=tod.slice(0,7);let tot=0,todT=0,moT=0,w=0,l=0;S.journal.forEach(j=>{const p=Number(j.pnl)||0;tot+=p;if(j.date===tod)todT+=p;if((j.date||'').startsWith(mo))moT+=p;if(p>0)w++;else if(p<0)l++});return{tot,todT,moT,w,l,wr:S.journal.length?Math.round(w*100/S.journal.length):0,count:S.journal.length}}
+function moneyStats(){const mo=todayISO().slice(0,7);let inn=0,out=0,byCat={};S.expenses.forEach(x=>{if((x.date||'').startsWith(mo)){const a=+x.amount||0;if(x.type==='in')inn+=a;else{out+=a;const c=x.cat||'Altro';byCat[c]=(byCat[c]||0)+a}}});return{inn,out,bal:inn-out,byCat}}
+
+function renderDash(){
+  const t=todayISO(),n=new Date(),hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),js=journalStats(),ms=moneyStats();
+  const nx=tasksForDate(t).filter(x=>!isTaskDone(x,t)&&x.time>=hm).sort((a,b)=>a.time.localeCompare(b.time))[0];
+  const ver=S.tasks.filter(x=>x.date&&x.date>=t&&!x.done&&/verific|interrog/i.test(x.title)).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const dd=ver?Math.round((new Date(ver.date+'T12:00:00')-new Date(t+'T12:00:00'))/864e5):0;
+  const sg=v=>(v>=0?'+':'')+v.toFixed(0);
+  $('dash').innerHTML=`
+    <button type="button" onclick="tab('agenda')" class="tile text-left"><div class="mono text-[9px] text-slate-400">PROSSIMO</div><b class="text-cyan-200">${nx?esc(nx.time+' '+nx.title):'Libero'}</b></button>
+    <button type="button" onclick="tab('trading');trSub('journal')" class="tile text-left"><div class="mono text-[9px] text-slate-400">TRADING OGGI</div><b class="${js.todT>=0?'text-emerald-300':'text-rose-400'}">${sg(js.todT)} €</b></button>
+    <button type="button" onclick="tab('money')" class="tile text-left"><div class="mono text-[9px] text-slate-400">SPESE MESE</div><b class="text-rose-300">-${ms.out.toFixed(0)} €</b></button>
+    <button type="button" onclick="tab('school')" class="tile text-left"><div class="mono text-[9px] text-slate-400">VERIFICA</div><b class="text-amber-300">${ver?(dd<=0?'Oggi ('+esc(ver.title)+')':dd+'gg · '+esc(ver.title)):'Nessuna'}</b></button>`;
+}
+
+function localAnswer(t){
+  const l=t.toLowerCase(),n=new Date();
+  if(/che ore|che ora è|l'ora/.test(l))return`Sono le ${n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}, Signore.`;
+  if(/che giorno|data di oggi/.test(l))return`Oggi è ${n.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.`;
+  if(/materie.*domani|zaino/.test(l)){const td=dowFromISO(tomorrowISO()),s=SCHOOL_TIMETABLE[td];return s?`Domani (${DOW_NAMES[td]}) Andrea ha: ${s}.`:`Domani (${DOW_NAMES[td]}) riposo!`}
+  if(/quanto ho fatto|totale.*(trading|journal)|bilancio.*journal/i.test(l)){const st=journalStats(),f=v=>(v>=0?'+':'')+v.toFixed(2);return`Signore, i calcoli esatti del Journal sono:\n- Oggi: ${f(st.todT)} €\n- Questo mese: ${f(st.moT)} €\n- Totale (${st.count} trade, ${st.w}V / ${st.l}P, Win Rate ${st.wr}%): ${f(st.tot)} €`}
+  if(/media.*voti|qual è la mia media/i.test(l)){const avg=S.grades.length?(S.grades.reduce((s,g)=>s+(+g.val||0),0)/S.grades.length).toFixed(2):"0";return S.grades.length?`La tua media generale su ${S.grades.length} voti è ${avg}, Signore.`:"Non ci sono ancora voti salvati."}
+  if(/quanto ho speso|totale.*spese/i.test(l)){const ms=moneyStats();return`Questo mese: entrate ${ms.inn.toFixed(2)} €, uscite ${ms.out.toFixed(2)} €, saldo ${(ms.bal).toFixed(2)} €.`}
+  if(/agenda.*oggi|impegni.*oggi/.test(l))return agendaSummary();
+  return null;
+}
+
+const CHAT_SCHEMA={
+  type:"OBJECT",
+  properties:{
+    reply:{type:"STRING"},web_query:{type:"STRING"},music_query:{type:"STRING"},analyze_sym:{type:"STRING"},analyze_tf:{type:"STRING"},
+    trading_mode:{type:"BOOLEAN"},alarm_time:{type:"STRING"},reminder_text:{type:"STRING"},whatsapp_text:{type:"STRING"},
+    add_journal:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},asset:{type:"STRING"},pnl:{type:"NUMBER"},note:{type:"STRING"}},required:["pnl"]}},
+    add_expense:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},type:{type:"STRING"},cat:{type:"STRING"},amount:{type:"NUMBER"},note:{type:"STRING"}},required:["amount"]}},
+    add_grade:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},subj:{type:"STRING"},val:{type:"NUMBER"}},required:["subj","val"]}},
+    add_tasks:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},repeat:{type:"STRING"},time:{type:"STRING"},category:{type:"STRING"},title:{type:"STRING"}},required:["time","category","title"]}},
+    complete_tasks:{type:"ARRAY",items:{type:"STRING"}},delete_tasks:{type:"ARRAY",items:{type:"STRING"}},
+    add_list_item:{type:"ARRAY",items:{type:"OBJECT",properties:{list:{type:"STRING"},item:{type:"STRING"}},required:["item"]}},
+    add_habit:{type:"ARRAY",items:{type:"STRING"}},complete_habit:{type:"ARRAY",items:{type:"STRING"}},
+    add_goal:{type:"ARRAY",items:{type:"OBJECT",properties:{period:{type:"STRING"},title:{type:"STRING"},steps:{type:"ARRAY",items:{type:"STRING"}}},required:["title"]}},
+    set_savings_goal:{type:"OBJECT",properties:{title:{type:"STRING"},target:{type:"NUMBER"},deadline:{type:"STRING"}}},
+    remember:{type:"ARRAY",items:{type:"STRING"}}
+  },
+  required:["reply"]
+};
+
+function sanitizeContents(arr){
+  const clean=[];
+  (arr||[]).forEach(turn=>{if(!turn||!turn.parts||!turn.parts.length)return;const role=turn.role==='model'?'model':'user';if(clean.length&&clean[clean.length-1].role===role)clean[clean.length-1]={role,parts:[...clean[clean.length-1].parts,...turn.parts]};else clean.push({role,parts:turn.parts})});
+  while(clean.length&&clean[0].role!=='user')clean.shift();
+  return clean;
+}
+function safeParseJson(raw){return JSON.parse(String(raw||"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim())}
+
+async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSchema=null){
+  const model=S.model||"gemini-3.5-flash-lite",url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const body={contents:sanitizeContents(contents),generationConfig:{}};
+  if(sys)body.system_instruction={parts:[{text:sys}]};
+  if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}
+  if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;
+  let err=null;
+  for(let i=0;i<2;i++){
+    const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
+    try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal});const raw=await r.text(),d=JSON.parse(raw);if(!r.ok||d.error)throw new Error(d.error?.message||"HTTP "+r.status);return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||""}
+    catch(e){err=e;if(i===0)await new Promise(r=>setTimeout(r,1500))}finally{clearTimeout(tm)}
+  }
+  throw err;
+}
+function normalizeCat(c){const u=String(c||"").toUpperCase().trim();return VALID_CATS.includes(u)?u:"PERSONALE"}
+function sortTasks(){S.tasks.sort((a,b)=>(a.date||'9999-99-99').localeCompare(b.date||'9999-99-99')||a.time.localeCompare(b.time))}
+function bodyKey(s){return String(s||"").replace(/^[^:]+:\s*/,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
+
+async function process(text){
+  const notes=[];let memCh=false;
+  const urls=text.match(/https?:\/\/[^\s]+/gi)||[];
+  if(urls.length||/^\s*(ricordati|ricorda|memorizza|tieni a mente|non dimenticare|salva)\b/i.test(text)){
+    const cn=`[${formatDateBadge(todayISO())}] ${text.trim()}`,dup=urls.length?urls.every(u=>S.memory.includes(u)):S.memory.toLowerCase().includes(text.trim().toLowerCase());
+    if(!dup){S.memory=(S.memory?S.memory+"\n":"")+cn;$('memory').value=S.memory;memCh=true;notes.push("🧠 Memoria")}
+  }
+  const tplTrigger=S.templates.find(tp=>new RegExp('\\bmodello\\s+'+tp.key+'\\b','i').test(text));
+  if(tplTrigger){addMsg('jarvis',`Modello "${tplTrigger.key}":\n${tplTrigger.text}`,"⚡ Modello rapido",tplTrigger.text);return}
+
+  if(/quanto ho fatto|totale.*(trading|journal)|bilancio.*journal/i.test(text)){
+    const exact=localAnswer(text);S.history.push({role:"user",parts:[{text}]},{role:"model",parts:[{text:exact}]});
+    addMsg('jarvis',exact,notes.join(" · "));speak(exact);await syncSave();return;
+  }
+  const loc=localAnswer(text);if(loc&&!S.key){addMsg('jarvis',loc,notes.join(" · "));speak(loc);if(memCh)await syncSave();return}
+  if(!S.key){if(memCh){await syncSave();addMsg('jarvis',"Salvato in memoria, Signore.",notes.join(" · "));return}addMsg('jarvis',"Inserisci una sola volta la chiave Gemini in ⚙ (verrà salvata su Drive).",notes.join(" · "));return}
+
+  $('status').textContent="ELABORAZIONE...";
+  const now=new Date().toLocaleString('it-IT',{dateStyle:'full',timeStyle:'short'}),td=dowFromISO(todayISO()),tm=dowFromISO(tomorrowISO());
+  const fullSchool=Object.keys(SCHOOL_TIMETABLE).map(k=>`${DOW_NAMES[k]}: ${SCHOOL_TIMETABLE[k]||'Riposo'}`).join('\n');
+  const agenda=S.tasks.map(t=>`${t.date||(t.repeat?'FISSO '+t.repeat:'FISSO')} ${t.time} [${t.category}] ${t.title}${isTaskDone(t,todayISO())?' (fatto)':''}`).join('\n')||"vuota";
+  const js=journalStats(),ms=moneyStats();
+  const secMem=[];
+  if(/trade|xau|oro|mercato|analisi|journal|strategia|grafico|m15|h4/i.test(text)&&S.memSections.trading)secMem.push("TRADING:\n"+S.memSections.trading);
+  if(/scuola|compit|verific|interrog|studi|zaino|voto|media/i.test(text)&&S.memSections.school)secMem.push("SCUOLA:\n"+S.memSections.school);
+  if(/soldi|spes|budget|risparm|banca|abbonament|euro/i.test(text)&&S.memSections.finance)secMem.push("SOLDI:\n"+S.memSections.finance);
+  if(/uscit|ristorante|viaggi|serata|tempo libero|mangiare|gusti/i.test(text)&&S.memSections.tastes)secMem.push("GUSTI:\n"+S.memSections.tastes);
+  const memTargeted=(secMem.length?secMem.join("\n\n")+"\n\n":"")+"GENERALE:\n"+(S.memory||"vuota");
+  const isPersonalRecall=/avevo inviato|avevo mandato|avevi salvato|ti ho inviato|ti ho mandato|ti ho detto|in memoria|ieri sera/i.test(text);
+
+  const dbRules=`\n\nREGOLE:\n- Oggi=${todayISO()} (${DOW_NAMES[td]}), Domani=${tomorrowISO()} (${DOW_NAMES[tm]}).\n- AGENDA INTELLIGENTE: scegli slot LIBERI considerando Scuola e impegni.\n- SOLDI: per spese/entrate usa "add_expense" (cat: ${EXP_CATS.join(',')}). Per risparmio usa "set_savings_goal".\n- LISTE/ABITUDINI/OBIETTIVI: "add_list_item", "add_habit", "complete_habit", "add_goal".\n- ANALISI LIVE: compila "analyze_sym" e "analyze_tf" ("5m","15m","1h","4h","1d").\n- JOURNAL: "add_journal" SOLO per trade CHIUSI con cifra.\n- PROMEMORIA IPHONE: "reminder_text". WEB:"web_query", DEMUS:"music_query", SVEGLIA:"alarm_time":"HH:MM", WHATSAPP:"whatsapp_text" SOLO se richiesto.\n- SCUOLA:\n${fullSchool}`;
+  const sys=`${S.playbook}${dbRules}\n\nMemoria:\n${memTargeted}\nOra:${now}\nSoldi mese: Entrate ${ms.inn.toFixed(2)}€, Uscite ${ms.out.toFixed(2)}€\nVoti (${S.grades.length}): ${S.grades.slice(0,10).map(g=>g.subj+':'+g.val).join(', ')||'nessuno'}\nJournal: Totale ${js.tot.toFixed(2)} (${js.w}V/${js.l}P)\nAgenda:\n${agenda}`;
+  S.history.push({role:"user",parts:[{text}]});
+
+  try{
+    let raw=await callGemini(sys,S.history.slice(-30),true),parsed;try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw||"Nessuna risposta."}}
+    if(parsed.analyze_tf&&S.driveUrl){
+      $('status').textContent="DATI MULTI-TF & NEWS...";
+      try{
+        const sym=(parsed.analyze_sym||"XAUUSD").toUpperCase(),tf=parsed.analyze_tf;
+        const [cr,nr,er]=await Promise.all([driveRequest("live_chart",S.pin||FALLBACK_PIN,{symbol:sym,tf,mtf:true}),driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}),driveRequest("econ_cal",S.pin||FALLBACK_PIN)]);
+        const econTxt=(er.events||[]).filter(ev=>ev.impact==='High').slice(0,8).map(ev=>`${ev.label} [${ev.country}] ${ev.title}`).join('\n')||"nessuno";
+        raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`DATI GRAFICO LIVE (CONFLUENZA H4 + ${tf.toUpperCase()}):\n${cr.chart||''}\n\nNEWS:\n${nr.news||''}\n\nCALENDARIO ECON HIGH:\n${econTxt}\n\nFornisci segnale oggettivo COMPRA / VENDI / ASPETTA, Entry, TP, SL, R/R. Lascia "analyze_tf":"" e non aggiungere al journal!`}]}],true);
+        try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}
+      }catch(le){notes.push("⚠️ Dati live non disponibili")}
+    }else if(!isPersonalRecall&&parsed.web_query&&String(parsed.web_query).trim()&&S.driveUrl){
+      $('status').textContent="RICERCA WEB...";
+      try{const w=await driveRequest("web",S.pin||FALLBACK_PIN,{query:String(parsed.web_query).trim()});if(w.ok&&w.results){raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`RISULTATI WEB:\n${w.results}\nRispondi usando questi dati e lascia "web_query":""`}]}],true);try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}}}catch(we){notes.push("⚠️ Errore web")}
+    }
+    let musicData=null;const mq=String(parsed.music_query||"").trim();
+    if(mq&&!/^(null|none|nessuno)$/i.test(mq)&&S.driveUrl){$('status').textContent="CERCO BRANO...";try{const mr=await driveRequest("music",S.pin||FALLBACK_PIN,{query:mq});musicData=(mr.ok&&mr.track&&mr.track.demusUrl)?{label:`Riproduci in Demus: ${mq}`,url:mr.track.demusUrl}:{label:`Apri Demus (${mq})`,url:"demus://"}}catch(me){musicData={label:`Apri Demus (${mq})`,url:"demus://"}}}
+    const reply=parsed.reply||"Fatto, Signore.",wantsWa=/whatsapp|messaggio|scrivi a|manda a|invia a|avvisa/i.test(text),rawWa=String(parsed.whatsapp_text||"").trim();
+    const waText=(wantsWa&&rawWa&&!/^(null|none|nessuno|n\/a)$/i.test(rawWa))?rawWa:"",tradingMode=Boolean(parsed.trading_mode),remData=String(parsed.reminder_text||"").trim();
+    let alarmData=null;const rawAl=String(parsed.alarm_time||"").trim();if(/^\d{1,2}:\d{2}$/.test(rawAl)){const p=rawAl.split(':');alarmData={date:todayISO(),time:`${p[0].padStart(2,'0')}:${p[1]}`}}
+    let agCh=false,jCh=false,mnCh=false,scCh=false,hbCh=false,glCh=false;
+
+    if(Array.isArray(parsed.add_journal)&&parsed.add_journal.length){parsed.add_journal.forEach((nj,i)=>{if(nj&&typeof nj.pnl==='number'&&!isNaN(nj.pnl)){S.journal.unshift({id:Date.now()+i*10+Math.floor(Math.random()*9),date:/^\d{4}-\d{2}-\d{2}$/.test(nj.date||"")?nj.date:todayISO(),asset:String(nj.asset||"XAUUSD").toUpperCase(),pnl:Number(nj.pnl),note:String(nj.note||"").trim()});jCh=true}});if(jCh)notes.push("📈 Journal")}
+    if(Array.isArray(parsed.add_expense)&&parsed.add_expense.length){parsed.add_expense.forEach((ne,i)=>{if(ne&&typeof ne.amount==='number'&&ne.amount>0){const cat=EXP_CATS.find(c=>c.toLowerCase()===String(ne.cat||"").toLowerCase())||"Altro";S.expenses.unshift({id:Date.now()+i*10+Math.floor(Math.random()*9),date:/^\d{4}-\d{2}-\d{2}$/.test(ne.date||"")?ne.date:todayISO(),type:ne.type==='in'?'in':'out',cat,amount:Number(ne.amount),note:String(ne.note||'').trim()});mnCh=true}});if(mnCh)notes.push("💶 Soldi")}
+    if(parsed.set_savings_goal&&parsed.set_savings_goal.target>0){S.savingsGoal={title:parsed.set_savings_goal.title||"Risparmio",target:+parsed.set_savings_goal.target,saved:S.savingsGoal.saved||0,deadline:parsed.set_savings_goal.deadline||isoOffset(180)};mnCh=true;notes.push("🎯 Risparmio")}
+    if(Array.isArray(parsed.add_grade)&&parsed.add_grade.length){parsed.add_grade.forEach((ng,i)=>{if(ng&&ng.subj&&typeof ng.val==='number'){S.grades.unshift({id:Date.now()+i*10+Math.floor(Math.random()*9),date:/^\d{4}-\d{2}-\d{2}$/.test(ng.date||"")?ng.date:todayISO(),subj:String(ng.subj).trim(),val:Number(ng.val)});scCh=true}});if(scCh)notes.push("🎓 Voti")}
+    if(Array.isArray(parsed.add_tasks)&&parsed.add_tasks.length){parsed.add_tasks.forEach((nt,i)=>{if(!nt?.title)return;const rep=["DAILY","MON","TUE","WED","THU","FRI","SAT","SUN"].includes(String(nt.repeat||"").toUpperCase())?String(nt.repeat).toUpperCase():"";S.tasks.push({id:Date.now()+i*10+Math.floor(Math.random()*9),date:rep?"":(/^\d{4}-\d{2}-\d{2}$/.test(nt.date||"")?nt.date:todayISO()),repeat:rep,time:/^\d{2}:\d{2}$/.test(nt.time||"")?nt.time:"09:00",category:normalizeCat(nt.category),title:String(nt.title).trim(),done:false,doneDates:[]});agCh=true});if(agCh)notes.push(`📅 +${parsed.add_tasks.length}`)}
+    if(Array.isArray(parsed.complete_tasks)){parsed.complete_tasks.forEach(q=>{const ql=String(q).toLowerCase();if(ql.length<2)return;S.tasks.forEach(t=>{if(t.title.toLowerCase().includes(ql)){if(t.repeat){t.doneDates=t.doneDates||[];if(!t.doneDates.includes(todayISO()))t.doneDates.push(todayISO())}else t.done=true;agCh=true}})});if(agCh)notes.push("✓ Fatto")}
+    if(Array.isArray(parsed.delete_tasks)){parsed.delete_tasks.forEach(q=>{const ql=String(q).toLowerCase();if(ql.length<2)return;S.tasks=S.tasks.filter(t=>{if(t.title.toLowerCase().includes(ql)){markDeleted('task',t.id);agCh=true;return false}return true})});if(agCh)notes.push("🗑 Rimossi")}
+    if(Array.isArray(parsed.add_list_item)&&parsed.add_list_item.length){parsed.add_list_item.forEach(li=>{if(!li?.item)return;const ln=String(li.list||"Spesa").trim();let l=S.lists.find(x=>x.name.toLowerCase()===ln.toLowerCase());if(!l){l={id:Date.now()+Math.floor(Math.random()*99),name:ln,items:[]};S.lists.unshift(l)}l.items.push({text:String(li.item).trim(),done:false});hbCh=true});if(hbCh)notes.push("📝 Lista")}
+    if(Array.isArray(parsed.add_habit)&&parsed.add_habit.length){parsed.add_habit.forEach((ht,i)=>{if(ht){S.habits.unshift({id:Date.now()+i*10,title:String(ht).trim(),doneDates:[]});hbCh=true}});if(hbCh)notes.push("🔥 Abitudine")}
+    if(Array.isArray(parsed.complete_habit)){parsed.complete_habit.forEach(q=>{const ql=String(q).toLowerCase();S.habits.forEach(h=>{if(h.title.toLowerCase().includes(ql)){h.doneDates=h.doneDates||[];if(!h.doneDates.includes(todayISO()))h.doneDates.push(todayISO());hbCh=true}})});if(hbCh)notes.push("🔥 Streak +1")}
+    if(Array.isArray(parsed.add_goal)&&parsed.add_goal.length){parsed.add_goal.forEach((g,i)=>{if(g?.title){S.goals.unshift({id:Date.now()+i*10,period:(g.period||'SETTIMANA').toUpperCase(),title:g.title,steps:(g.steps||['Passo 1','Passo 2']).map(s=>({text:s,done:false}))});glCh=true}});if(glCh)notes.push("🎯 Obiettivo")}
+    if(Array.isArray(parsed.remember)){parsed.remember.forEach(it=>{const c=String(it||"").trim();if(c&&!S.memory.toLowerCase().includes(c.toLowerCase())){S.memory=(S.memory?S.memory+"\n":"")+c;memCh=true}});if(memCh){$('memory').value=S.memory;if(!notes.includes("🧠 Memoria"))notes.push("🧠 Memoria")}}
+
+    if(agCh){sortTasks();renderAgenda()} if(jCh)renderJournal(); if(mnCh){syncInputs();renderMoney()} if(scCh)renderGrades(); if(hbCh)renderHabitsLists(); if(glCh)renderGoals();
+    S.history.push({role:"model",parts:[{text:reply}]});if(S.history.length>50)S.history=S.history.slice(-50);
+    addMsg('jarvis',reply,notes.join(" · "),waText,alarmData,musicData,tradingMode,remData);speak(reply);await syncSave();
+    if(musicData)openExternal(musicData.url);else if(tradingMode)tab('trading');
+  }catch(err){S.history.pop();addMsg('jarvis',"Errore Gemini: "+err.message);if(memCh)await syncSave();speak("Errore temporaneo, Signore.")}
+  updateStatus();
+}
+
+function morningBriefing(){
+  primeAudio();
+  const td=dowFromISO(todayISO()),sch=SCHOOL_TIMETABLE[td]||"Riposo";
+  const todTasks=tasksForDate(todayISO()).filter(t=>!isTaskDone(t,todayISO())).sort((a,b)=>a.time.localeCompare(b.time));
+  const ver=S.tasks.filter(x=>x.date&&x.date>=todayISO()&&!x.done&&/verific|interrog/i.test(x.title)).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const msg=`☀️ RIEPILOGO DEL MATTINO (${DOW_NAMES[td]} ${formatDateBadge(todayISO())}):\n• Scuola: ${sch}\n• Impegni di oggi: ${todTasks.length?todTasks.map(t=>`${t.time} ${t.title}`).join(' · '):'nessun impegno'}\n${ver?'• Prossima verifica: '+formatDateBadge(ver.date)+' '+ver.title+'\n':''}\nSignore, cosa vuole spostare o aggiungere oggi?`;
+  addMsg('jarvis',msg,"☀️ Briefing Mattutino");speak(msg,true);
+}
+function eveningReview(){
+  primeAudio();
+  const tod=todayISO(),all=tasksForDate(tod),doneList=all.filter(t=>isTaskDone(t,tod)),todoList=all.filter(t=>!isTaskDone(t,tod));
+  const tom=dowFromISO(tomorrowISO());
+  const msg=`🌙 REVISIONE SERALE:\n• Completati oggi (${doneList.length}): ${doneList.map(t=>t.title).join(', ')||'nessuno'}\n• Rimasti in sospeso (${todoList.length}): ${todoList.map(t=>t.title).join(', ')||'tutto fatto!'}\n• Domani (${DOW_NAMES[tom]}): ${SCHOOL_TIMETABLE[tom]||'Riposo'}.\n\nScrivimi cosa hai fatto, cosa non sei riuscito a fare e se vuoi spostare a domani gli impegni rimasti!`;
+  addMsg('jarvis',msg,"🌙 Revisione Serale");speak(msg,true);
+}
+function suggestOutings(){
+  const ms=moneyStats();
+  quick(`Consigliami 3 idee per serate, ristoranti o uscite nel tempo libero considerando i miei gusti (${S.memSections.tastes||'nessuno salvato'}) e che questo mese ho speso ${ms.out.toFixed(0)}€ (saldo ${ms.bal.toFixed(0)}€). Includi orari e un eventuale promemoria per prenotare.`);
+}
+
+/* ---- TRADING PRO: LOTTI, MULTI-TF, EQUITY CURVE ---- */
+function calcLots(saveCfg=false){
+  const bal=parseFloat($('lotBal').value)||0,risk=parseFloat($('lotRisk').value)||0;
+  const entry=parseFloat($('lotEntry').value),sl=parseFloat($('lotSl').value),tp=parseFloat($('lotTp').value),sym=$('trSym').value;
+  if(saveCfg&&(bal>0||risk>0)){S.tradingCfg={bal,risk};saveLocalOnly()}
+  if(!bal||!risk||isNaN(entry)||isNaN(sl)||entry===sl){$('lotBadge').textContent="0.00 lotti";$('lotInfo').textContent="Inserisci Entry e Stop Loss per calcolare i lotti esatti.";return}
+  const riskAmt=bal*risk/100,dist=Math.abs(entry-sl);
+  let perLot=100;
+  if(sym==='EURUSD'||sym==='GBPUSD')perLot=100000;
+  else if(sym==='USDJPY')perLot=100000/Math.max(1,entry);
+  else if(sym==='BTCUSD'||sym==='NAS100')perLot=1;
+  const lots=riskAmt/(dist*perLot);
+  let rrTxt="";
+  if(!isNaN(tp)&&tp!==entry){const rr=(Math.abs(tp-entry)/dist).toFixed(2);rrTxt=` · R/R 1:${rr}`}
+  $('lotBadge').textContent=`${lots.toFixed(2)} lotti`;
+  $('lotInfo').innerHTML=`Rischio: <b class="text-amber-300">${riskAmt.toFixed(2)}</b> (${risk}%) · Distanza SL: <b>${dist.toFixed(sym==='EURUSD'||sym==='GBPUSD'?5:2)}</b>${rrTxt} → Apri <b class="text-emerald-300">${lots.toFixed(2)} lotti</b> su ${sym}`;
+}
+
+function renderEquityCurve(){
+  const el=$('jEquity');if(!el)return;
+  if(!S.journal.length){el.innerHTML='<div class="mono text-[10px] text-slate-400 text-center py-2">📈 Curva Equity: registra dei trade per vedere il grafico.</div>';return}
+  const sorted=[...S.journal].sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.id||0)-(b.id||0));
+  let cum=0;const pts=[0];sorted.forEach(j=>{cum+=(+j.pnl||0);pts.push(cum)});
+  const min=Math.min(0,...pts),max=Math.max(0,...pts),span=(max-min)||1,W=320,H=96,pad=10;
+  const coords=pts.map((v,i)=>{
+    const x=pts.length===1?W/2:pad+(i/(pts.length-1))*(W-pad*2);
+    const y=H-pad-((v-min)/span)*(H-pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const y0=(H-pad-((0-min)/span)*(H-pad*2)).toFixed(1),col=cum>=0?'#34d399':'#fb7185';
+  el.innerHTML=`<div class="flex justify-between mono text-[9px] text-slate-400 mb-1"><span>📈 CURVA EQUITY (${sorted.length} trade)</span><span class="${cum>=0?'text-emerald-300':'text-rose-400'} font-bold">${cum>=0?'+':''}${cum.toFixed(2)}</span></div><svg viewBox="0 0 ${W} ${H}" class="w-full h-24 overflow-visible"><line x1="${pad}" y1="${y0}" x2="${W-pad}" y2="${y0}" stroke="rgba(148,163,184,0.3)" stroke-dasharray="3 3"/><polyline fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${coords}"/></svg>`;
+}
+
+function renderChecklist(){
+  const done=chkState.filter(Boolean).length;$('chkScore').textContent=`${done}/6 ${done===6?'🟢 PRONTO':'🟡 VERIFICA'}`;
+  $('chkList').innerHTML=CHK_ITEMS.map((txt,i)=>`<button type="button" onclick="toggleChk(${i})" class="p-2 rounded-xl border text-left flex items-center gap-2 ${chkState[i]?'bg-emerald-950/35 border-emerald-400/50 text-emerald-200':'bg-slate-950/75 border-cyan-500/20 text-slate-300'}"><span>${chkState[i]?'☑':'☐'}</span><span>${esc(txt)}</span></button>`).join('');
+}
+function toggleChk(i){chkState[i]=!chkState[i];renderChecklist()}
+
+async function loadEconCal(showLoading=true){
+  const el=$('econList');if(!S.driveUrl){el.textContent="URL Drive non configurato.";return}
+  if(showLoading)el.textContent="Caricamento calendario economico USD/EUR...";
+  try{
+    const res=await driveRequest("econ_cal",S.pin||FALLBACK_PIN);econCache=Array.isArray(res.events)?res.events:[];
+    if(!econCache.length){el.textContent="Nessun evento High/Medium USD-EUR questa settimana.";return}
+    el.innerHTML=econCache.map(ev=>{const hi=ev.impact==='High';return`<div class="p-2.5 rounded-xl border ${hi?'bg-rose-950/25 border-rose-500/35':'bg-amber-950/20 border-amber-500/25'} flex items-center justify-between gap-2"><div class="min-w-0"><span class="mono text-[9px] ${hi?'text-rose-300':'text-amber-300'} font-bold">${esc(ev.label)} · ${esc(ev.country)} ${hi?'🔴':'🟠'}</span><div class="text-slate-100 truncate">${esc(ev.title)}</div></div><div class="mono text-[9px] text-slate-400 text-right shrink-0">Est: ${esc(ev.forecast)}<br>Prec: ${esc(ev.previous)}</div></div>`}).join('');
+  }catch(e){el.textContent="Errore calendario: "+e.message}
+}
+
+async function analyzeLiveChart(){
+  if(!S.key){$('chartBox').classList.remove('hidden');$('chartOut').textContent="Serve chiave Gemini in ⚙.";return}
+  if(!S.driveUrl){$('chartBox').classList.remove('hidden');$('chartOut').textContent="Serve URL Drive.";return}
+  const sym=$('trSym').value,tf=$('trTf').value,idea=$('chartIdea').value.trim();
+  $('chartBox').classList.remove('hidden');$('chartMeta').textContent=`LIVE MTF ${sym} (H4 + ${tf.toUpperCase()})`;
+  let sec=0;$('chartOut').textContent=`Scarico candele H4 + ${tf.toUpperCase()} + News + EconCal... (0s)`;
+  clearInterval(chartTimer);chartTimer=setInterval(()=>{sec++;$('chartOut').textContent=`Analisi Multi-Timeframe ${sym}... (${sec}s)`},1000);
+  try{
+    const [cr,nr,er]=await Promise.all([driveRequest("live_chart",S.pin||FALLBACK_PIN,{symbol:sym,tf,mtf:true}),driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}),econCache.length?Promise.resolve({events:econCache}):driveRequest("econ_cal",S.pin||FALLBACK_PIN)]);
+    if(Array.isArray(er.events)&&er.events.length&&!econCache.length){econCache=er.events;loadEconCal(false)}
+    const econTxt=(er.events||[]).filter(ev=>ev.impact==='High').slice(0,8).map(ev=>`${ev.label} [${ev.country}] ${ev.title}`).join('\n')||"nessuno";
+    const prompt=`Analizza DATI LIVE REALI MULTI-TIMEFRAME di ${sym} (NON registrarlo nel journal!). Idea: "${idea||'nessuna'}".\n\nDati (confluenza H4 + ${tf.toUpperCase()}):\n${cr.chart||''}\n\nNews:\n${nr.news||''}\n\nCalendario High:\n${econTxt}\n\nValuta oggettivamente la confluenza tra trend H4 e ingresso ${tf.toUpperCase()}:\n1) Confluenza H4 + ${tf.toUpperCase()} (EMA, RSI, ATR, Fib) & News\n2) SEGNALE: COMPRA / VENDI / ASPETTA a [prezzo]\n3) ENTRY: [numero] | SL: [numero] | TP: [numero] (R/R)\nAnalisi illustrativa.`;
+    const out=await callGemini(S.playbook,[{role:"user",parts:[{text:prompt}]}],false,950);
+    clearInterval(chartTimer);const entry={id:Date.now(),dateTime:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),idea:`${sym} H4+${tf.toUpperCase()}${idea?' · '+idea:''}`,analysis:out||"Nessuna analisi."};
+    S.charts.unshift(entry);if(S.charts.length>15)S.charts=S.charts.slice(0,15);showChartEntry(entry);renderChartsHistory();await syncSave();speak("Analisi multi timeframe completata, Signore.");
+  }catch(err){clearInterval(chartTimer);$('chartMeta').textContent="ERRORE";$('chartOut').textContent="Errore: "+err.message}
+}
+
+async function analyzePhotoChart(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';if(!S.key){alert("Serve chiave Gemini in ⚙.");return}
+  $('chartBox').classList.remove('hidden');$('chartMeta').textContent="ANALISI FOTO + NEWS...";let sec=0;$('chartOut').textContent=`Lettura foto... (0s)`;
+  clearInterval(chartTimer);chartTimer=setInterval(()=>{sec++;$('chartOut').textContent=`Analisi foto... (${sec}s)`},1000);
+  const sym=$('trSym').value,idea=$('chartIdea').value.trim();
+  try{
+    const [img,nr]=await Promise.all([fileToJpegBase64(f,1100),S.driveUrl?driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}):Promise.resolve({news:""})]);
+    const out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Analizza questo screenshot (${sym}). Idea: "${idea||'nessuna'}". News:\n${nr.news||''}\nDai struttura, SEGNALE COMPRA/VENDI/ASPETTA, Entry, TP e SL.`},{inlineData:{mimeType:img.mime,data:img.data}}]}],false,900);
+    clearInterval(chartTimer);const entry={id:Date.now(),dateTime:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),idea:idea||`${sym} Foto`,analysis:out};
+    S.charts.unshift(entry);if(S.charts.length>15)S.charts=S.charts.slice(0,15);showChartEntry(entry);renderChartsHistory();await syncSave();speak("Analisi completata.");
+  }catch(err){clearInterval(chartTimer);$('chartMeta').textContent="ERRORE";$('chartOut').textContent="Errore: "+err.message}
+}
+function showChartEntry(e){if(!e)return;currentChartText=`${e.dateTime} - ${e.idea}\n\n${e.analysis}`;$('chartBox').classList.remove('hidden');$('chartMeta').textContent=`${e.dateTime} · ${e.idea}`;$('chartOut').innerHTML=formatRich(e.analysis)}
+function renderChartsHistory(){const b=$('chartsHistBox'),l=$('chartsList');l.innerHTML='';if(!S.charts.length){b.classList.add('hidden');return}b.classList.remove('hidden');showChartEntry(S.charts[0]);S.charts.forEach(c=>{const d=document.createElement('div');d.className="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/20 flex items-center gap-2";d.innerHTML=`<button type="button" onclick="openChart(${c.id})" class="flex-1 text-left min-w-0"><div class="mono text-[10px] text-amber-300">${esc(c.dateTime)}</div><div class="text-xs text-slate-200 truncate">${esc(c.idea)}</div></button><button type="button" onclick="delChart(${c.id})" class="p-1.5 text-slate-500 text-xs">✕</button>`;l.appendChild(d)})}
+function openChart(id){const c=S.charts.find(x=>x.id===id);if(c)showChartEntry(c)}
+function delChart(id){markDeleted('chart',id);S.charts=S.charts.filter(x=>x.id!==id);renderChartsHistory();syncSave()}
+function clearCharts(){S.charts.forEach(c=>markDeleted('chart',c.id));S.charts=[];currentChartText="";$('chartBox').classList.add('hidden');$('chartOut').textContent='';renderChartsHistory();syncSave()}
+
+function shiftJMonth(d){jMonth+=d;if(jMonth<0){jMonth=11;jYear--}else if(jMonth>11){jMonth=0;jYear++}renderJCalendar()}
+function selectJDay(iso){selectedJDate=iso;if(iso!=='ALL')$('jDate').value=iso;renderJournal()}
+function renderJCalendar(){
+  $('jCalTitle').textContent=`${MONTHS_IT[jMonth]} ${jYear}`;$('jAllBtn').className="px-2 py-1 rounded-lg border mono text-[10px] "+(selectedJDate==='ALL'?"bg-cyan-500 text-slate-950 border-cyan-400 font-bold":"border-cyan-500/30 text-slate-300");
+  const g=$('jCalGrid');g.innerHTML='';const f=(new Date(jYear,jMonth,1).getDay()+6)%7,dim=new Date(jYear,jMonth+1,0).getDate(),tod=todayISO();
+  for(let i=0;i<f;i++)g.appendChild(document.createElement('div'));
+  for(let d=1;d<=dim;d++){const iso=`${jYear}-${String(jMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,tr=S.journal.filter(j=>j.date===iso),net=tr.reduce((s,j)=>s+(Number(j.pnl)||0),0),sel=selectedJDate===iso;let cls="text-slate-300 hover:bg-slate-800/70";if(tr.length>0)cls=net>=0?"bg-emerald-500/25 border border-emerald-400 text-emerald-200 font-bold":"bg-rose-500/25 border border-rose-400 text-rose-200 font-bold";else if(iso===tod)cls="border border-cyan-400/60 text-cyan-200 bg-slate-900";if(sel)cls+=" ring-2 ring-cyan-400";const btn=document.createElement('button');btn.type='button';btn.onclick=()=>selectJDay(iso);btn.className="py-1.5 rounded-lg flex flex-col items-center justify-center mono text-[11px] "+cls;btn.innerHTML=`<span>${d}</span><span class="text-[8px] leading-none mt-0.5">${tr.length?(net>=0?'+':'')+Math.round(net):'·'}</span>`;g.appendChild(btn)}
+}
+function renderJournal(){
+  const st=journalStats();$('jStats').innerHTML=`<div class="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/20"><div class="mono text-[9px] text-slate-400">TOTALE</div><div class="mono text-sm font-bold ${st.tot>=0?'text-emerald-300':'text-rose-400'}">${st.tot>=0?'+':''}${st.tot.toFixed(2)}</div></div><div class="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/20"><div class="mono text-[9px] text-slate-400">WIN RATE</div><div class="mono text-sm font-bold text-cyan-300">${st.wr}%</div></div><div class="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/20"><div class="mono text-[9px] text-slate-400">TRADE</div><div class="mono text-sm font-bold text-slate-100">${st.w}V / ${st.l}P</div></div>`;
+  renderEquityCurve();renderJCalendar();
+  const list=selectedJDate==='ALL'?S.journal:S.journal.filter(j=>j.date===selectedJDate),dNet=list.reduce((s,j)=>s+(Number(j.pnl)||0),0);
+  $('jHeader').textContent=selectedJDate==='ALL'?`TUTTI I TRADE (${list.length})`:`TRADE DEL ${formatDateBadge(selectedJDate)} · NETTO: ${dNet>=0?'+':''}${dNet.toFixed(2)}`;
+  const el=$('jList');el.innerHTML='';if(!list.length){el.innerHTML='<p class="text-center text-xs text-slate-400 mono py-3">Nessun trade chiuso registrato.</p>';return}
+  list.forEach(j=>{const d=document.createElement('div'),win=j.pnl>=0;d.className=`p-3 rounded-xl border flex items-center gap-2 ${win?'bg-emerald-950/25 border-emerald-500/35':'bg-rose-950/25 border-rose-500/35'}`;d.innerHTML=`<div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="mono text-[10px] text-slate-400">${esc(formatDateBadge(j.date))}</span><span class="mono text-xs font-bold text-cyan-300">${esc(j.asset)}</span><span class="mono text-xs font-bold ${win?'text-emerald-300':'text-rose-400'}">${win?'+':''}${Number(j.pnl).toFixed(2)}</span></div><p class="text-xs text-slate-200">${esc(j.note||'Nessuna nota.')}</p></div><button type="button" onclick="delTrade(${j.id})" class="p-1.5 text-slate-500 text-xs">✕</button>`;el.appendChild(d)});
+}
+function addTrade(e){e.preventDefault();const p=parseFloat($('jPnl').value);if(isNaN(p))return;const dt=$('jDate').value||todayISO();S.journal.unshift({id:Date.now(),date:dt,asset:$('jAsset').value.trim().toUpperCase()||'XAUUSD',pnl:p,note:$('jNote').value.trim()});selectedJDate=dt;$('jPnl').value='';$('jNote').value='';chkState=[false,false,false,false,false,false];renderChecklist();renderJournal();syncSave()}
+function delTrade(id){markDeleted('journal',id);S.journal=S.journal.filter(x=>x.id!==id);renderJournal();syncSave()}
+async function analyzeJournal(){if(!S.journal.length){speak("Registra prima almeno un trade chiuso.",true);return}if(!S.key){alert("Serve chiave Gemini in ⚙.");return}$('jAiBox').classList.remove('hidden');$('jAiTitle').textContent="COACH AI · STRATEGIA";$('jAiOut').textContent="Analisi in corso...";const dataTxt=S.journal.slice(0,40).map(j=>`${j.date} | ${j.asset} | ${j.pnl>=0?'+':''}${j.pnl} | ${j.note||'-'}`).join('\n');try{const out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Sei il Trading Coach AI. Analizza:\n${dataTxt}\nMemoria Trading:\n${S.memSections.trading}\nRispondi: 1) Errori ricorrenti 2) Punti di forza 3) 3 regole concrete.`}]}],false,750);currentJText=out;$('jAiOut').innerHTML=formatRich(out);speak("Analisi del journal completata.",true)}catch(err){$('jAiOut').textContent="Errore: "+err.message}}
+async function weeklyTradingReport(){
+  if(!S.journal.length){speak("Nessun trade registrato.",true);return}if(!S.key){alert("Serve chiave Gemini in ⚙.");return}
+  const weekAgo=isoOffset(-7),wk=S.journal.filter(j=>(j.date||"")>=weekAgo),use=wk.length?wk:S.journal.slice(0,15);
+  $('jAiBox').classList.remove('hidden');$('jAiTitle').textContent="📊 REPORT SETTIMANALE";$('jAiOut').textContent="Generazione report settimanale...";
+  const dataTxt=use.map(j=>`${j.date}|${j.asset}|${j.pnl>=0?'+':''}${j.pnl}|${j.note||'-'}`).join('\n');
+  try{const out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Genera il REPORT SETTIMANALE di trading su questi trade:\n${dataTxt}\nRispondi in 3 punti brevi:\n1) Risultati settimana (netto, win rate, miglior/peggior trade)\n2) Errori ricorrenti\n3) UNA SOLA COSA CONCRETA da migliorare la prossima settimana.`}]}],false,650);currentJText=out;$('jAiOut').innerHTML=formatRich(out);speak("Report settimanale pronto.",true)}catch(err){$('jAiOut').textContent="Errore: "+err.message}
+}
+function saveStrategyToMemory(){if(!currentJText)return;S.memSections.trading=(S.memSections.trading?S.memSections.trading+"\n\n":"")+currentJText.replace(/\*\*/g,'');$('memTrading').value=S.memSections.trading;syncSave();speak("Salvato nella sezione Trading.",true)}
+
+/* ---- SOLDI & FOTO SCONTRINO ---- */
+async function importReceipt(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  if(!S.key){alert("Serve chiave Gemini in ⚙.");return}
+  const st=$('receiptStatus');st.classList.remove('hidden');st.textContent="Lettura scontrino in corso...";
+  try{
+    const img=await fileToJpegBase64(f,1000);
+    const schema={type:"OBJECT",properties:{date:{type:"STRING"},amount:{type:"NUMBER"},cat:{type:"STRING"},note:{type:"STRING"}},required:["amount","cat"]};
+    const raw=await callGemini(`Leggi questo scontrino/ricevuta. Estrai totale pagato (amount), data (YYYY-MM-DD, se non leggibile usa ${todayISO()}), categoria esatta tra: ${EXP_CATS.join(', ')}, e descrizione breve (note, es. nome negozio/cosa comprata).`,[{role:"user",parts:[{text:"Estrai i dati dello scontrino."},{inlineData:{mimeType:img.mime,data:img.data}}]}],true,400,schema);
+    const p=safeParseJson(raw);
+    if(!(p.amount>0))throw new Error("Importo non riconosciuto");
+    const cat=EXP_CATS.find(c=>c.toLowerCase()===String(p.cat||'').toLowerCase())||'Altro';
+    const dt=/^\d{4}-\d{2}-\d{2}$/.test(p.date||'')?p.date:todayISO();
+    S.expenses.unshift({id:Date.now(),date:dt,type:'out',cat,amount:+p.amount,note:String(p.note||'Scontrino').trim()});
+    renderMoney();await syncSave();
+    st.textContent=`✓ Aggiunto: -${(+p.amount).toFixed(2)}€ [${cat}] ${p.note||''} (${formatDateBadge(dt)})`;
+    speak(`Scontrino da ${(+p.amount).toFixed(2)} euro registrato in ${cat}.`,true);
+  }catch(err){st.textContent="Errore scontrino: "+err.message}
+}
+
+function addExpenseForm(e){
+  e.preventDefault();const amt=parseFloat($('eAmt').value);if(isNaN(amt)||amt<=0)return;
+  const cat=$('eCat').value,type=$('eType').value;
+  S.expenses.unshift({id:Date.now(),date:todayISO(),type,cat,amount:amt,note:$('eNote').value.trim()});
+  $('eAmt').value='';$('eNote').value='';renderMoney();syncSave();
+  if(type==='out'&&S.budgets[cat]){const ms=moneyStats(),spent=ms.byCat[cat]||0;if(spent>=S.budgets[cat])speak(`Attenzione Signore: budget ${cat} superato.`,true);else if(spent>=S.budgets[cat]*0.8)speak(`Avviso: è oltre l'80% del budget ${cat}.`,true)}
+}
+function delExpense(id){markDeleted('exp',id);S.expenses=S.expenses.filter(x=>x.id!==id);renderMoney();syncSave()}
+
+function renderMoney(){
+  const ms=moneyStats();
+  $('mStats').innerHTML=`
+    <div class="p-2 rounded-xl bg-slate-950/80 border border-emerald-500/25"><div class="mono text-[9px] text-slate-400">ENTRATE</div><div class="mono text-sm font-bold text-emerald-300">+${ms.inn.toFixed(0)} €</div></div>
+    <div class="p-2 rounded-xl bg-slate-950/80 border border-rose-500/25"><div class="mono text-[9px] text-slate-400">USCITE</div><div class="mono text-sm font-bold text-rose-400">-${ms.out.toFixed(0)} €</div></div>
+    <div class="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/25"><div class="mono text-[9px] text-slate-400">SALDO MESE</div><div class="mono text-sm font-bold ${ms.bal>=0?'text-cyan-300':'text-rose-400'}">${ms.bal>=0?'+':''}${ms.bal.toFixed(0)} €</div></div>`;
+
+  const alerts=[];
+  Object.keys(S.budgets||{}).forEach(cat=>{
+    const lim=+S.budgets[cat]||0,sp=ms.byCat[cat]||0;if(lim<=0)return;const pct=Math.round(sp*100/lim);
+    if(pct>=100)alerts.push(`<div class="p-2 rounded-xl bg-rose-950/40 border border-rose-500/50 text-xs text-rose-200">🚨 Budget <b>${esc(cat)}</b> superato: ${sp.toFixed(0)}€ / ${lim}€ (${pct}%)</div>`);
+    else if(pct>=80)alerts.push(`<div class="p-2 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-200">⚠️ Vicino al limite <b>${esc(cat)}</b>: ${sp.toFixed(0)}€ / ${lim}€ (${pct}%)</div>`);
+  });
+  $('budgetAlerts').innerHTML=alerts.join('');
+
+  const entries=Object.entries(ms.byCat).sort((a,b)=>b[1]-a[1]),maxVal=entries.length?entries[0][1]:1;
+  $('mChart').innerHTML=`<div class="mono text-[10px] text-cyan-400 font-bold mb-1">📊 GRAFICO SPESE DEL MESE</div>`+(entries.length?entries.map(([cat,val])=>{
+    const w=Math.max(6,Math.round(val*100/maxVal));
+    return`<div class="space-y-0.5"><div class="flex justify-between text-[11px]"><span>${esc(cat)}</span><span class="mono text-cyan-300">${val.toFixed(2)} €</span></div><div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" style="width:${w}%"></div></div></div>`;
+  }).join(''):'<p class="text-[11px] text-slate-400">Nessuna uscita registrata questo mese.</p>');
+
+  $('eList').innerHTML=S.expenses.slice(0,25).map(x=>`<div class="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/20 flex items-center justify-between gap-2 text-xs"><div class="min-w-0"><span class="mono text-[10px] text-slate-400">${formatDateBadge(x.date)}</span> <span class="px-1.5 py-0.5 rounded bg-slate-800 mono text-[9px] text-cyan-200">${esc(x.cat||'Altro')}</span> <b class="${x.type==='in'?'text-emerald-300':'text-rose-400'}">${x.type==='in'?'+':'-'}${(+x.amount).toFixed(2)}€</b> <span class="text-slate-300">${esc(x.note||'')}</span></div><button type="button" onclick="delExpense(${x.id})" class="text-slate-500 px-1">✕</button></div>`).join('')||'<p class="text-center text-xs text-slate-400 py-2">Nessun movimento.</p>';
+
+  $('budgetList').innerHTML=Object.entries(S.budgets||{}).map(([cat,lim])=>{
+    const sp=ms.byCat[cat]||0,pct=lim>0?Math.min(100,Math.round(sp*100/lim)):0,bar=pct>=100?'bg-rose-500':pct>=80?'bg-amber-400':'bg-cyan-400';
+    return`<div class="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/20 space-y-1"><div class="flex justify-between text-xs"><b>${esc(cat)}</b><span class="mono text-[11px]">${sp.toFixed(0)}€ / ${lim}€ <button type="button" onclick="delBudget('${esc(cat)}')" class="text-slate-500 ml-2">✕</button></span></div><div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden"><div class="h-full ${bar}" style="width:${pct}%"></div></div></div>`;
+  }).join('')||'<p class="text-xs text-slate-400">Nessun budget impostato.</p>';
+
+  const sg=S.savingsGoal||{};
+  if(sg.target>0&&sg.deadline){
+    const rem=Math.max(0,sg.target-(sg.saved||0)),days=Math.max(1,Math.round((new Date(sg.deadline+'T12:00:00')-new Date())/864e5)),months=Math.max(1,days/30.4);
+    $('savOut').innerHTML=`🎯 <b>${esc(sg.title||'Obiettivo')}</b>: mancano <b>${rem.toFixed(2)} €</b> su ${sg.target}€ entro il ${formatDateBadge(sg.deadline)} (${days} gg).<br>💡 Devi mettere da parte <b class="text-emerald-300">${(rem/months).toFixed(2)} €/mese</b> (${(rem/(days/7)).toFixed(2)} €/settimana).`;
+  }else $('savOut').textContent="Imposta un obiettivo e una scadenza per calcolare quanto risparmiare al mese.";
+}
+function saveBudget(e){e.preventDefault();const cat=$('bCat').value,lim=parseFloat($('bLim').value);if(isNaN(lim))return;if(lim<=0)delete S.budgets[cat];else S.budgets[cat]=lim;$('bLim').value='';renderMoney();syncSave()}
+function delBudget(cat){delete S.budgets[cat];renderMoney();syncSave()}
+function saveSavingsGoal(e){e.preventDefault();S.savingsGoal={title:$('savTitle').value.trim()||'Risparmio',target:parseFloat($('savTarget').value)||0,saved:parseFloat($('savSaved').value)||0,deadline:$('savDate').value};renderMoney();syncSave()}
+
+async function importCsv(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  const txt=await f.text(),lines=txt.split(/\r?\n/).filter(Boolean).slice(0,120);
+  if(!lines.length)return;
+  $('csvOut').classList.remove('hidden');$('csvOut').textContent="Analisi estratto conto CSV in corso...";$('csvImpBtn').classList.add('hidden');
+  if(!S.key){$('csvOut').textContent="Inserisci chiave Gemini in ⚙ per categorizzare il CSV con AI.";return}
+  try{
+    const schema={type:"OBJECT",properties:{summary:{type:"STRING"},items:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},type:{type:"STRING"},cat:{type:"STRING"},amount:{type:"NUMBER"},note:{type:"STRING"}},required:["amount","note"]}}},required:["summary","items"]};
+    const raw=await callGemini("Analizza righe estratto conto CSV bancario. Estrai movimenti in JSON: summary (riepilogo + eventuali anomalie/abbonamenti) e items [{date:'YYYY-MM-DD',type:'out'|'in',cat:'Cibo|Uscite|Trasporti|Abbonamenti|Scuola|Shopping|Altro',amount,note}].",[{role:"user",parts:[{text:lines.join('\n')}]}],true,1600,schema);
+    const p=safeParseJson(raw);csvParsedRows=p.items||[];
+    $('csvOut').innerHTML=formatRich((p.summary||"")+"\n\nMovimenti rilevati: "+csvParsedRows.length);
+    if(csvParsedRows.length)$('csvImpBtn').classList.remove('hidden');
+  }catch(err){$('csvOut').textContent="Errore CSV: "+err.message}
+}
+function confirmCsvImport(){
+  if(!csvParsedRows.length)return;
+  csvParsedRows.forEach((r,i)=>{S.expenses.unshift({id:Date.now()+i*10+Math.floor(Math.random()*9),date:/^\d{4}-\d{2}-\d{2}$/.test(r.date||"")?r.date:todayISO(),type:r.type==='in'?'in':'out',cat:r.cat||'Altro',amount:Math.abs(+r.amount||0),note:String(r.note||'CSV').trim()})});
+  csvParsedRows=[];$('csvImpBtn').classList.add('hidden');renderMoney();syncSave();speak("Movimenti importati!",true);
+}
+async function detectSubscriptions(){
+  const outs=S.expenses.filter(x=>x.type!=='in');
+  if(!outs.length){$('subOut').textContent="Nessuna spesa registrata da analizzare.";return}
+  const kw=/netflix|spotify|icloud|apple|prime|amazon|dazn|palestra|tim|iliad|vodafone|chatgpt|tradingview|youtube|abbonament/i;
+  const known=outs.filter(x=>kw.test(x.note||'')||x.cat==='Abbonamenti');
+  if(S.key){
+    $('subOut').textContent="Analisi pagamenti ricorrenti con AI...";
+    try{
+      const data=outs.slice(0,80).map(x=>`${x.date}|${x.amount}€|${x.cat}|${x.note}`).join('\n');
+      const out=await callGemini("Sei un consulente finanziario.",[{role:"user",parts:[{text:`Analizza queste spese e individua TUTTI i possibili abbonamenti o pagamenti ricorrenti (anche nascosti). Calcola il costo mensile e quanto pesano ALL'ANNO (€/anno).\n\n${data}`}]}],false,600);
+      $('subOut').innerHTML=formatRich(out);return;
+    }catch(e){}
+  }
+  const totM=known.reduce((s,x)=>s+(+x.amount||0),0);
+  $('subOut').textContent=known.length?`Trovati ${known.length} possibili abbonamenti (~${(totM*12).toFixed(2)} €/anno):\n`+known.map(x=>`• ${x.note||x.cat}: ${x.amount}€`).join('\n'):"Nessun abbonamento evidente trovato.";
+}
+
+function enableNotifications(){
+  if(!('Notification'in window)){alert("Notifiche browser non supportate qui. Usa Push ntfy/Telegram in ⚙ oppure ⏰/📌!");return}
+  Notification.requestPermission().then(p=>{alert(p==='granted'?"Notifiche browser attive! Per notifiche a schermo spento imposta ntfy o Telegram in ⚙.":"Permesso negato.")});
+}
+function checkDueNotifications(){
+  const t=todayISO(),n=new Date(),nowM=n.getHours()*60+n.getMinutes();
+  tasksForDate(t).filter(x=>!isTaskDone(x,t)).forEach(x=>{
+    const[h,m]=(x.time||'09:00').split(':').map(Number),tm=h*60+m,diff=tm-nowM,k=t+'_'+x.id;
+    if((diff===15||diff===0)&&!notifiedKeys[k+'_'+diff]){
+      notifiedKeys[k+'_'+diff]=true;
+      const msg=diff===0?`È ora: ${x.title}`:`Tra 15 min (${x.time}): ${x.title}`;
+      if('Notification'in window&&Notification.permission==='granted')try{new Notification('J.A.R.V.I.S.',{body:msg})}catch(e){}
+      speak(msg,true);
+    }
+  });
+}
+
+function shiftMonth(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--}else if(calMonth>11){calMonth=0;calYear++}renderCalendar()}
+function selectDay(iso){selectedDate=iso;if(iso!=='ALL')$('tDate').value=iso;renderAgenda()}
+function renderCalendar(){
+  $('calTitle').textContent=`${MONTHS_IT[calMonth]} ${calYear}`;$('allDaysBtn').className="px-2 py-1 rounded-lg border mono text-[10px] "+(selectedDate==='ALL'?"bg-cyan-500 text-slate-950 border-cyan-400 font-bold":"border-cyan-500/30 text-slate-300");
+  const g=$('calGrid');g.innerHTML='';const f=(new Date(calYear,calMonth,1).getDay()+6)%7,dim=new Date(calYear,calMonth+1,0).getDate(),tod=todayISO();
+  for(let i=0;i<f;i++)g.appendChild(document.createElement('div'));
+  for(let d=1;d<=dim;d++){const iso=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,dt=S.tasks.filter(t=>t.date===iso&&!t.done),hs=dt.some(t=>t.category==='SCUOLA'),sel=selectedDate===iso,it=iso===tod,btn=document.createElement('button');btn.type='button';btn.onclick=()=>selectDay(iso);btn.className="py-1.5 rounded-lg flex flex-col items-center justify-center mono text-xs transition "+(sel?"bg-cyan-500 text-slate-950 font-bold":it?"border border-cyan-400/70 text-cyan-200 bg-slate-900":"text-slate-200 hover:bg-slate-800/70");btn.innerHTML=`<span>${d}</span>`+(dt.length?`<span class="w-1.5 h-1.5 rounded-full mt-0.5 ${sel?'bg-slate-950':hs?'bg-amber-400':'bg-cyan-400'}"></span>`:`<span class="w-1.5 h-1.5 mt-0.5"></span>`);g.appendChild(btn)}
+}
+function saveTasks(){syncSave()}
+function renderAgenda(){
+  renderCalendar();const sB=$('schoolDayBox'),sT=$('schoolDayTitle'),sL=$('schoolDayList');
+  if(selectedDate&&selectedDate!=='ALL'){const dw=dowFromISO(selectedDate),sj=SCHOOL_TIMETABLE[dw];sB.classList.remove('hidden');sT.textContent=`🎒 MATERIE DI ${DOW_NAMES[dw].toUpperCase()} (${formatDateBadge(selectedDate)})`;sL.textContent=sj||"Nessuna lezione scolastica (Riposo)."}else sB.classList.add('hidden');
+  const el=$('agenda'),hdr=$('agendaHeader');el.innerHTML='';const curD=selectedDate||'ALL',flt=tasksForDate(curD);
+  hdr.textContent=curD==='ALL'?`TUTTI GLI IMPEGNI (${flt.length})`:`ORARI DEL ${formatDateBadge(curD)} (${DOW_NAMES[dowFromISO(curD)]})`;
+  if(!flt.length){el.innerHTML='<p class="text-center text-xs text-slate-400 mono py-4">Nessun impegno.</p>';return}
+  flt.sort((a,b)=>a.time.localeCompare(b.time)).forEach(t=>{const d=document.createElement('div'),done=isTaskDone(t,curD),al=`${curD!=='ALL'?curD:(t.date||todayISO())} ${t.time}`,bg=t.date?`<span class="mono text-[10px] text-amber-300">${esc(formatDateBadge(t.date))}</span>`:`<span class="mono text-[9px] text-emerald-300">${t.repeat?esc(t.repeat==='DAILY'?'OGNI GIORNO':DOW_NAMES[t.repeat].slice(0,3).toUpperCase()):'FISSO'}</span>`;d.className="p-3 rounded-xl border flex items-center gap-2 "+(done?"bg-slate-950/40 border-slate-800 opacity-60":"bg-slate-950/90 border-cyan-500/25");d.innerHTML=`<button type="button" onclick="toggleTask(${t.id})" class="w-6 h-6 rounded-lg border shrink-0 ${done?'bg-cyan-500 text-slate-950':'border-cyan-500/50 text-transparent'}">✓</button><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2 mb-0.5">${bg}<span class="mono text-xs font-bold text-cyan-300">${esc(t.time)}</span><span class="px-1.5 rounded text-[9px] mono bg-cyan-500/15 text-cyan-300">${esc(t.category)}</span></div><p class="text-xs text-slate-100 ${done?'line-through text-slate-400':''}">${esc(t.title)}</p></div><button type="button" onclick="addToAppleCal(${t.id})" title="Apple Calendar" class="p-1 text-cyan-300 text-xs">📅</button><button type="button" onclick="promTask(${t.id})" title="Promemoria iPhone" class="p-1 text-indigo-300 text-xs">📌</button><button type="button" onclick="runShortcut('Jarvis Sveglia','${esc(al)}')" title="Sveglia" class="p-1 text-amber-300 text-xs">⏰</button><button type="button" onclick="delTask(${t.id})" class="p-1 text-slate-500 text-xs">✕</button>`;el.appendChild(d)});
+}
+function promTask(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;const d=(selectedDate!=='ALL'?selectedDate:(t.date||todayISO()));runShortcut('Jarvis Promemoria',`${d} ${t.time} ${t.title}`)}
+function addTask(e){e.preventDefault();const ti=$('tTitle').value.trim();if(!ti)return;const rep=$('tRep').value,dt=rep?"":($('tDate').value||"");S.tasks.push({id:Date.now(),date:dt,repeat:rep,time:$('tTime').value,category:$('tCat').value,title:ti,done:false,doneDates:[]});if(dt)selectedDate=dt;sortTasks();saveTasks();renderAgenda();$('tTitle').value=''}
+function toggleTask(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;if(t.repeat&&selectedDate!=='ALL'){t.doneDates=Array.isArray(t.doneDates)?t.doneDates:[];const i=t.doneDates.indexOf(selectedDate);if(i>=0)t.doneDates.splice(i,1);else t.doneDates.push(selectedDate)}else t.done=!t.done;saveTasks();renderAgenda()}
+function delTask(id){markDeleted('task',id);S.tasks=S.tasks.filter(x=>x.id!==id);saveTasks();renderAgenda()}
+
+function addGoal(e){e.preventDefault();const title=$('gTitle').value.trim();if(!title)return;S.goals.unshift({id:Date.now(),period:$('gPeriod').value,title,steps:[{text:'Passo 1: Pianifica',done:false},{text:'Passo 2: Esegui',done:false},{text:'Passo 3: Verifica',done:false}]});$('gTitle').value='';renderGoals();syncSave()}
+async function aiSplitGoal(){
+  const title=$('gTitle').value.trim();if(!title||!S.key){alert(S.key?"Scrivi prima il titolo dell'obiettivo.":"Serve chiave Gemini.");return}
+  try{
+    const schema={type:"OBJECT",properties:{steps:{type:"ARRAY",items:{type:"STRING"}}},required:["steps"]};
+    const raw=await callGemini("Dividi l'obiettivo in 4-5 passi piccoli e concreti.",[{role:"user",parts:[{text:`Obiettivo (${$('gPeriod').value}): ${title}`}]}],true,300,schema);
+    const p=safeParseJson(raw);
+    S.goals.unshift({id:Date.now(),period:$('gPeriod').value,title,steps:(p.steps||[]).map(s=>({text:s,done:false}))});$('gTitle').value='';renderGoals();syncSave();
+  }catch(e){alert("Errore: "+e.message)}
+}
+function toggleGoalStep(gid,si){const g=S.goals.find(x=>x.id===gid);if(!g||!g.steps[si])return;g.steps[si].done=!g.steps[si].done;renderGoals();syncSave()}
+function delGoal(gid){markDeleted('goal',gid);S.goals=S.goals.filter(x=>x.id!==gid);renderGoals();syncSave()}
+function renderGoals(){
+  $('goalsList').innerHTML=S.goals.map(g=>{
+    const tot=g.steps.length||1,dn=g.steps.filter(s=>s.done).length,pct=Math.round(dn*100/tot);
+    return`<div class="p-3 rounded-xl bg-slate-950/80 border border-cyan-500/25 space-y-2"><div class="flex justify-between items-center text-xs"><div><span class="mono text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">${esc(g.period)}</span> <b class="text-slate-100">${esc(g.title)}</b></div><span class="mono text-[10px] text-emerald-300">${pct}% <button type="button" onclick="delGoal(${g.id})" class="text-slate-500 ml-1">✕</button></span></div><div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden"><div class="h-full bg-emerald-400" style="width:${pct}%"></div></div><div class="space-y-1">${g.steps.map((s,i)=>`<button type="button" onclick="toggleGoalStep(${g.id},${i})" class="w-full text-left text-xs flex items-center gap-2 ${s.done?'line-through text-slate-500':'text-slate-200'}"><span>${s.done?'☑':'☐'}</span><span>${esc(s.text)}</span></button>`).join('')}</div></div>`;
+  }).join('')||'<p class="text-xs text-slate-400">Nessun obiettivo attivo.</p>';
+}
+
+function habitStreak(h){
+  const set=new Set(h.doneDates||[]);let st=0,off=set.has(todayISO())?0:-1;
+  if(off===-1&&!set.has(isoOffset(-1)))return 0;
+  for(let i=off;i>-365;i--){if(set.has(isoOffset(i)))st++;else break}
+  return st;
+}
+function addHabit(e){e.preventDefault();const t=$('hTitle').value.trim();if(!t)return;S.habits.unshift({id:Date.now(),title:t,doneDates:[]});$('hTitle').value='';renderHabitsLists();syncSave()}
+function toggleHabit(id){const h=S.habits.find(x=>x.id===id);if(!h)return;h.doneDates=h.doneDates||[];const t=todayISO(),i=h.doneDates.indexOf(t);if(i>=0)h.doneDates.splice(i,1);else h.doneDates.push(t);renderHabitsLists();syncSave()}
+function delHabit(id){markDeleted('hab',id);S.habits=S.habits.filter(x=>x.id!==id);renderHabitsLists();syncSave()}
+function addListItem(e){e.preventDefault();const ln=$('lName').value.trim()||'Spesa',it=$('lItem').value.trim();if(!it)return;let l=S.lists.find(x=>x.name.toLowerCase()===ln.toLowerCase());if(!l){l={id:Date.now(),name:ln,items:[]};S.lists.unshift(l)}l.items.push({text:it,done:false});$('lItem').value='';renderHabitsLists();syncSave()}
+function toggleListItem(lid,ii){const l=S.lists.find(x=>x.id===lid);if(!l||!l.items[ii])return;l.items[ii].done=!l.items[ii].done;renderHabitsLists();syncSave()}
+function delList(lid){markDeleted('lst',lid);S.lists=S.lists.filter(x=>x.id!==lid);renderHabitsLists();syncSave()}
+function renderHabitsLists(){
+  const tod=todayISO();
+  $('habitsList').innerHTML=S.habits.map(h=>{const dn=(h.doneDates||[]).includes(tod),st=habitStreak(h);return`<div class="p-2.5 rounded-xl bg-slate-950/80 border ${dn?'border-amber-400/50 bg-amber-950/20':'border-cyan-500/20'} flex items-center justify-between gap-2 text-xs"><button type="button" onclick="toggleHabit(${h.id})" class="flex items-center gap-2 flex-1 text-left"><span>${dn?'✅':'⭕'}</span><span class="${dn?'text-amber-200 font-bold':'text-slate-200'}">${esc(h.title)}</span></button><span class="mono text-[10px] text-amber-300">🔥 ${st} gg</span><button type="button" onclick="delHabit(${h.id})" class="text-slate-500 px-1">✕</button></div>`}).join('')||'<p class="text-xs text-slate-400">Nessuna abitudine.</p>';
+  $('listsBox').innerHTML=S.lists.map(l=>`<div class="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/20 space-y-1.5"><div class="flex justify-between items-center text-xs"><b class="text-cyan-300">${esc(l.name)}</b><button type="button" onclick="delList(${l.id})" class="text-slate-500 text-xs">✕</button></div>${l.items.map((it,i)=>`<button type="button" onclick="toggleListItem(${l.id},${i})" class="block w-full text-left text-xs ${it.done?'line-through text-slate-500':'text-slate-200'}">${it.done?'☑':'☐'} ${esc(it.text)}</button>`).join('')}</div>`).join('')||'<p class="text-xs text-slate-400">Nessuna lista.</p>';
+}
+
+/* ---- SCUOLA: POMODORO, IMPORTA VOTI SCREENSHOT, MEDIA MATERIE, DIDUP, QUIZ ---- */
+function pomBeep(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=0.15;o.start();setTimeout(()=>{o.stop();c.close()},350)}catch(e){}}
+function pomRender(){const m=String(Math.floor(pom.sec/60)).padStart(2,'0'),s=String(pom.sec%60).padStart(2,'0');$('pomDisplay').textContent=`${m}:${s}`;$('pomBtn').textContent=pom.running?"⏸ Pausa":"▶ Avvia"}
+function pomToggle(){
+  if(pom.running){clearInterval(pom.iv);pom.running=false;pomRender();return}
+  pom.running=true;pomRender();
+  pom.iv=setInterval(()=>{
+    pom.sec--;pomRender();
+    if(pom.sec<=0){clearInterval(pom.iv);pom.running=false;pomBeep();const nx=pom.mode===25?5:25;speak(pom.mode===25?"Tempo di studio finito! Fai 5 minuti di pausa, Andrea.":"Pausa finita! Si riprende a studiare.",true);pomReset(nx)}
+  },1000);
+}
+function pomReset(mins){clearInterval(pom.iv);pom.running=false;pom.mode=mins;pom.sec=mins*60;$('pomMode').textContent=mins===25?"Sessione Studio (25 min)":"Sessione Pausa (5 min)";pomRender()}
+
+async function importGradesImg(e){
+  const files=Array.from(e.target.files||[]);if(!files.length)return;if(!S.key){e.target.value='';alert("Inserisci chiave Gemini in ⚙.");return}
+  const st=$('gradesImgStatus');st.classList.remove('hidden');let added=0;
+  try{
+    st.textContent=`Lettura di ${files.length} screenshot voti...`;
+    const parts=[{text:`Analizza questi screenshot del registro elettronico (didUP/Argo). Estrai TUTTI i voti visibili con: 1) materia esatta (es: Matematica, Fisica, Italiano, Latino, Inglese, Storia, Filosofia, Scienze, Disegno e St. Arte, Sc. Motorie, Religione), 2) valore numerico (converti + in .25, ½ in .5, - in .75 del voto inferiore, es: 7+ -> 7.25, 7- -> 6.75, 6½ -> 6.5), 3) data del voto in YYYY-MM-DD (anno corrente ${todayISO().slice(0,4)} se omesso).`}];
+    for(let i=0;i<files.length;i++){const img=await fileToJpegBase64(files[i],1050);parts.push({inlineData:{mimeType:img.mime,data:img.data}})}
+    const schema={type:"OBJECT",properties:{grades:{type:"ARRAY",items:{type:"OBJECT",properties:{subj:{type:"STRING"},val:{type:"NUMBER"},date:{type:"STRING"}},required:["subj","val","date"]}}},required:["grades"]};
+    const raw=await callGemini("Estrai voti scolastici precisi in JSON.",[{role:"user",parts}],true,1200,schema);
+    const p=safeParseJson(raw);
+    if(Array.isArray(p.grades))p.grades.forEach((g,idx)=>{
+      if(!g?.subj||typeof g.val!=='number'||isNaN(g.val))return;
+      const subj=String(g.subj).trim(),val=Number(g.val),dt=/^\d{4}-\d{2}-\d{2}$/.test(g.date||'')?g.date:todayISO();
+      const dup=S.grades.some(x=>x.subj.toLowerCase()===subj.toLowerCase()&&x.date===dt&&Math.abs((+x.val)-val)<0.01);
+      if(!dup){S.grades.unshift({id:Date.now()+idx*10+Math.floor(Math.random()*9),date:dt,subj,val});added++}
+    });
+    if(added>0){renderGrades();await syncSave();st.textContent=`✓ Importati ${added} voti (materia, voto e data)!`;speak(`Importati ${added} voti.`,true)}
+    else st.textContent="Nessun nuovo voto trovato (o già presenti).";
+  }catch(err){st.textContent="Errore importazione voti: "+err.message}finally{e.target.value=''}
+}
+
+function addGrade(e){e.preventDefault();const subj=$('gSubj').value.trim(),val=parseFloat($('gVal').value),dt=$('gDate').value||todayISO();if(!subj||isNaN(val))return;S.grades.unshift({id:Date.now(),date:dt,subj,val});$('gSubj').value='';$('gVal').value='';renderGrades();syncSave()}
+function delGrade(id){markDeleted('grade',id);S.grades=S.grades.filter(g=>g.id!==id);renderGrades();syncSave()}
+
+function renderGrades(){
+  const avg=S.grades.length?(S.grades.reduce((s,g)=>s+(+g.val||0),0)/S.grades.length).toFixed(2):'-';
+  $('gradesSummary').textContent=`Media Gen: ${avg} (${S.grades.length})`;
+  const bySubj={};
+  S.grades.forEach(g=>{const k=g.subj.trim();bySubj[k]=bySubj[k]||[];bySubj[k].push(+g.val)});
+  $('subjAverages').innerHTML=Object.entries(bySubj).map(([s,arr])=>{
+    const m=(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2);
+    const col=+m>=6.5?'border-emerald-400/50 text-emerald-300 bg-emerald-950/30':+m>=6?'border-amber-400/50 text-amber-300 bg-amber-950/30':'border-rose-400/50 text-rose-300 bg-rose-950/30';
+    return`<span class="px-2 py-1 rounded-lg border mono text-[10px] ${col}">${esc(s)}: <b>${m}</b> (${arr.length})</span>`;
+  }).join('');
+  const curSel=$('tgSubj').value,subjs=Object.keys(bySubj);
+  $('tgSubj').innerHTML='<option value="__ALL__">Media Generale</option>'+subjs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  if(curSel&&(curSel==='__ALL__'||subjs.includes(curSel)))$('tgSubj').value=curSel;
+  calcNeededGrade();
+  $('gradesList').innerHTML=S.grades.map(g=>`<div class="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/20 flex justify-between items-center"><span>🎓 <b class="text-cyan-200">${esc(g.subj)}</b>: <b class="${g.val>=6?'text-emerald-300':'text-rose-400'}">${g.val}</b> <span class="mono text-[10px] text-slate-400">(${formatDateBadge(g.date)})</span></span><button type="button" onclick="delGrade(${g.id})" class="text-slate-500 px-1">✕</button></div>`).join('')||'<p class="text-slate-400 mono text-[10px]">Nessun voto salvato.</p>';
+}
+function calcNeededGrade(){
+  const sel=$('tgSubj').value,target=parseFloat($('tgVal').value)||7.5;
+  const list=sel==='__ALL__'?S.grades:S.grades.filter(g=>g.subj===sel);
+  if(!list.length){$('tgOut').textContent="Aggiungi almeno un voto per calcolare cosa ti serve.";return}
+  const sum=list.reduce((s,g)=>s+(+g.val||0),0),n=list.length,cur=(sum/n).toFixed(2);
+  const need1=target*(n+1)-sum;
+  if(need1<=1) $('tgOut').innerHTML=`Attuale: <b>${cur}</b> → Sei già sopra l'obiettivo (${target})!`;
+  else if(need1<=10) $('tgOut').innerHTML=`Attuale: <b>${cur}</b> → Nella prossima verifica ti serve almeno <b class="text-emerald-300">${need1.toFixed(2)}</b>!`;
+  else{const need2=(target*(n+2)-sum)/2;$('tgOut').innerHTML=`Attuale: <b>${cur}</b> → Con 1 solo voto servirebbe ${need1.toFixed(1)} (impossibile): servono <b class="text-amber-300">${need2.toFixed(2)}</b> di media nei prossimi 2 voti.`}
+}
+
+async function importDidup(e){
+  const files=Array.from(e.target.files||[]);if(!files.length)return;if(!S.key){e.target.value='';alert("Inserisci chiave Gemini in ⚙.");return}
+  const st=$('didupStatus');st.classList.remove('hidden');let added=0,firstDate="";
+  try{
+    st.textContent=`Preparazione di ${files.length} foto...`;
+    const parts=[{text:`Queste ${files.length} immagini sono schermate consecutive di didUP Famiglia dall'alto verso il basso. Estrai TUTTI i compiti e verifiche collegando "DA CONSIGNARE IL..." alle foto successive.`}];
+    for(let i=0;i<files.length;i++){const img=await fileToJpegBase64(files[i],1000);parts.push({inlineData:{mimeType:img.mime,data:img.data}})}
+    st.textContent=`Analisi congiunta di ${files.length} foto...`;
+    const sys=`Estrai compiti/verifiche dalle immagini didUP in sequenza. Oggi=${todayISO()} (anno ${todayISO().slice(0,4)}). Usa SOLO nome materia breve. Mai "DA CONSIGNARE" nel titolo. Orario compiti="08:00". category="SCUOLA". JSON con "add_tasks" e "reply".`;
+    const raw=await callGemini(sys,[{role:"user",parts}],true,1200);let p;try{p=safeParseJson(raw)}catch(err){p={reply:raw,add_tasks:[]}}
+    if(Array.isArray(p.add_tasks))p.add_tasks.forEach((nt,idx)=>{
+      if(!nt?.title||/da consignare|da consegnare/i.test(nt.title))return;
+      const d=/^\d{4}-\d{2}-\d{2}$/.test(nt.date||"")?nt.date:todayISO(),tm=/^\d{2}:\d{2}$/.test(nt.time||"")?nt.time:"08:00",ti=String(nt.title).trim(),bk=bodyKey(ti);
+      if(!S.tasks.some(x=>x.date===d&&(x.title.toLowerCase()===ti.toLowerCase()||(bk.length>8&&bodyKey(x.title)===bk)))){S.tasks.push({id:Date.now()+idx*10+Math.floor(Math.random()*9),date:d,repeat:"",time:tm,category:"SCUOLA",title:ti,done:false,doneDates:[]});if(!firstDate)firstDate=d;added++}
+    });
+    if(added>0){sortTasks();if(firstDate){selectedDate=firstDate;calYear=+firstDate.slice(0,4);calMonth=+firstDate.slice(5,7)-1;$('tDate').value=firstDate}renderAgenda();await syncSave();st.textContent=`✓ Importati ${added} impegni su Drive!`;speak(`Importati ${added} impegni.`,true)}
+    else st.textContent="Nessun nuovo impegno (o già presenti).";
+  }catch(err){st.textContent="Errore: "+err.message}finally{e.target.value=''}
+}
+
+async function generateStudyPlan(e){
+  e.preventDefault();if(!S.key){alert("Serve chiave Gemini.");return}
+  const subj=$('stSubj').value.trim(),dt=$('stDate').value;if(!subj||!dt)return;
+  $('stOut').classList.remove('hidden');$('stOut').textContent="Generazione piano a ritroso...";$('stAddBtn').classList.add('hidden');
+  try{
+    const schema={type:"OBJECT",properties:{planText:{type:"STRING"},sessions:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},time:{type:"STRING"},title:{type:"STRING"}},required:["date","time","title"]}}},required:["planText","sessions"]};
+    const raw=await callGemini("Crea un calendario di ripasso a ritroso per Andrea (liceo scientifico).",[{role:"user",parts:[{text:`Oggi=${todayISO()}, Verifica/Interrogazione di "${subj}" il giorno ${dt}. Genera sessioni di studio distribuite a ritroso negli slot pomeridiani liberi (15:00-19:00), considerando l'agenda attuale:\n${S.tasks.slice(0,30).map(t=>(t.date||t.repeat)+' '+t.time+' '+t.title).join('\n')}`}]}],true,800,schema);
+    const p=safeParseJson(raw);studyPlanTasks=p.sessions||[];
+    $('stOut').innerHTML=formatRich(p.planText||"Piano pronto.");
+    if(studyPlanTasks.length)$('stAddBtn').classList.remove('hidden');
+  }catch(err){$('stOut').textContent="Errore: "+err.message}
+}
+function addStudyPlanToAgenda(){
+  if(!studyPlanTasks.length)return;
+  studyPlanTasks.forEach((s,i)=>S.tasks.push({id:Date.now()+i*10+Math.floor(Math.random()*9),date:s.date,repeat:"",time:s.time||'15:30',category:"SCUOLA",title:s.title,done:false,doneDates:[]}));
+  sortTasks();studyPlanTasks=[];$('stAddBtn').classList.add('hidden');renderAgenda();syncSave();speak("Sessioni di studio aggiunte in agenda.",true);
+}
+
+async function startQuiz(customTopic=null){
+  if(!S.key){alert("Serve chiave Gemini.");return}
+  const subj=$('qSubj').value.trim()||"Generale",topic=customTopic||$('qTopic').value.trim()||subj;
+  quiz={active:true,subj,topic,step:1,history:[]};$('qChat').innerHTML='';$('qState').textContent=`Domanda 1/3 · ${subj}`;$('qScore').textContent='';
+  await askNextQuizTurn(`Inizia l'interrogazione orale di ${subj} su "${topic}" per Andrea. Fai SOLO la Domanda 1 di 3, breve e chiara.`);
+}
+async function sendQuizAnswer(e){
+  e.preventDefault();if(!quiz.active)return;const ans=$('qAns').value.trim();if(!ans)return;$('qAns').value='';
+  addQuizBubble('TU',ans);
+  if(quiz.step<3){
+    quiz.step++;$('qState').textContent=`Domanda ${quiz.step}/3 · ${quiz.subj}`;
+    await askNextQuizTurn(`Risposta dello studente alla domanda ${quiz.step-1}: "${ans}". Correggi brevemente, assegna un punteggio parziale su 10 e poi fai SOLO la Domanda ${quiz.step} di 3.`);
+  }else{
+    quiz.active=false;$('qState').textContent="Interrogazione conclusa";
+    await askNextQuizTurn(`Risposta finale dello studente alla domanda 3: "${ans}". Correggi brevemente, poi assegna il VOTO FINALE (numero da 1 a 10, es: 7.5) in JSON field "finalGrade" oltre a "feedback".`,true);
+  }
+}
+async function askNextQuizTurn(prompt,isFinal=false){
+  quiz.history.push({role:"user",parts:[{text:prompt}]});
+  const schema=isFinal?{type:"OBJECT",properties:{feedback:{type:"STRING"},finalGrade:{type:"NUMBER"}},required:["feedback","finalGrade"]}:{type:"OBJECT",properties:{feedback:{type:"STRING"}},required:["feedback"]};
+  try{
+    const raw=await callGemini(`Sei un professore gentile ma rigoroso che interroga Andrea passo-passo su ${quiz.subj}.`,quiz.history,true,500,schema);
+    const p=safeParseJson(raw),fb=p.feedback||"Ok.";
+    quiz.history.push({role:"model",parts:[{text:fb}]});
+    addQuizBubble('JARVIS PROF',fb);speak(fb,true);
+    if(isFinal&&typeof p.finalGrade==='number'){
+      const v=Math.min(10,Math.max(1,Math.round(p.finalGrade*4)/4));
+      $('qScore').textContent=`VOTO: ${v}/10`;
+      S.grades.unshift({id:Date.now(),date:todayISO(),subj:quiz.subj,val:v});renderGrades();syncSave();
+    }
+  }catch(e){addQuizBubble('ERRORE',e.message)}
+}
+function addQuizBubble(who,txt){const d=document.createElement('div');d.className=who==='TU'?"text-right text-cyan-200":"text-slate-100";d.innerHTML=`<span class="mono text-[9px] text-amber-300">${esc(who)}:</span> ${formatRich(txt)}`;$('qChat').appendChild(d);$('qChat').scrollTop=$('qChat').scrollHeight}
+
+async function explainHomeworkPhoto(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';if(!S.key){alert("Serve chiave Gemini.");return}
+  $('hwOut').classList.remove('hidden');$('hwOut').textContent="Analisi dell'esercizio in corso...";$('hwQuizBtn').classList.add('hidden');
+  const subj=$('hwSubj').value.trim()||"Compito";
+  try{
+    const img=await fileToJpegBase64(f,1100);
+    const out=await callGemini("Sei il tutor personale di Andrea. NON dare solo il risultato finale: spiega il ragionamento e i passaggi uno per uno in modo chiarissimo e termina con una domanda di verifica per farlo ragionare.",[{role:"user",parts:[{text:`Materia: ${subj}. Spiega questo esercizio passo dopo passo ad Andrea.`},{inlineData:{mimeType:img.mime,data:img.data}}]}],false,950);
+    lastHomeworkSummary=`Esercizio di ${subj}:\n${out.slice(0,400)}`;
+    $('hwOut').innerHTML=formatRich(out);$('hwQuizBtn').classList.remove('hidden');speak("Spiegazione pronta per Andrea.",true);
+  }catch(err){$('hwOut').textContent="Errore: "+err.message}
+}
+function quizFromHomework(){if(!lastHomeworkSummary)return;$('qSubj').value=$('hwSubj').value.trim()||"Ripasso";$('qTopic').value=lastHomeworkSummary;scSub('quiz');startQuiz(lastHomeworkSummary)}
+
+async function draftEmailReply(){
+  const txt=$('emIn').value.trim();if(!txt||!S.key){alert(S.key?"Incolla un'email.":"Serve chiave Gemini.");return}
+  $('emOut').classList.remove('hidden');$('emOut').textContent="Scrittura risposta...";$('emBtns').classList.add('hidden');
+  try{
+    const out=await callGemini("Scrivi solo il testo della risposta email pronta da inviare.",[{role:"user",parts:[{text:`Tono richiesto: ${$('emTone').value}.\nEmail ricevuta:\n${txt}`}]}],false,500);
+    $('emOut').textContent=out;$('emBtns').classList.remove('hidden');
+  }catch(e){$('emOut').textContent="Errore: "+e.message}
+}
+async function summarizeLongText(){
+  const txt=$('sumIn').value.trim();if(!txt||!S.key){alert(S.key?"Incolla un testo.":"Serve chiave Gemini.");return}
+  $('sumOut').classList.remove('hidden');$('sumOut').textContent="Sintesi in corso...";$('sumAgBtn').classList.add('hidden');
+  try{
+    const schema={type:"OBJECT",properties:{bullets:{type:"ARRAY",items:{type:"STRING"}},actions:{type:"ARRAY",items:{type:"STRING"}}},required:["bullets","actions"]};
+    const raw=await callGemini("Riassumi in punti chiave brevi ed estrai azioni concrete.",[{role:"user",parts:[{text:txt}]}],true,700,schema);
+    const p=safeParseJson(raw);summaryActionTasks=p.actions||[];
+    $('sumOut').innerHTML=formatRich("📌 **PUNTI CHIAVE:**\n"+(p.bullets||[]).map(b=>"• "+b).join("\n")+"\n\n✅ **AZIONI DA FARE:**\n"+(summaryActionTasks.map(a=>"• "+a).join("\n")||"Nessuna"));
+    if(summaryActionTasks.length)$('sumAgBtn').classList.remove('hidden');
+  }catch(e){$('sumOut').textContent="Errore: "+e.message}
+}
+function addSummaryActionsToAgenda(){
+  summaryActionTasks.forEach((a,i)=>S.tasks.push({id:Date.now()+i*10,date:todayISO(),repeat:"",time:"16:00",category:"PERSONALE",title:a,done:false,doneDates:[]}));
+  sortTasks();summaryActionTasks=[];$('sumAgBtn').classList.add('hidden');renderAgenda();syncSave();speak("Azioni aggiunte in agenda.",true);
+}
+function addTemplate(e){e.preventDefault();const key=$('tplKey').value.trim(),text=$('tplText').value.trim();if(!key||!text)return;S.templates.unshift({id:Date.now(),key,text});$('tplKey').value='';$('tplText').value='';renderTemplates();syncSave()}
+function delTemplate(id){markDeleted('tpl',id);S.templates=S.templates.filter(x=>x.id!==id);renderTemplates();syncSave()}
+function copyTpl(id){const t=S.templates.find(x=>x.id===id);if(t)copyText(t.text)}
+function waTpl(id){const t=S.templates.find(x=>x.id===id);if(t)openWhatsApp(t.text)}
+function renderTemplates(){
+  $('tplList').innerHTML=S.templates.map(tp=>`<div class="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/20 flex items-center justify-between gap-2 text-xs"><div class="min-w-0"><span class="mono text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">${esc(tp.key)}</span> <span class="text-slate-200">${esc(tp.text)}</span></div><div class="flex gap-1 shrink-0"><button type="button" onclick="copyTpl(${tp.id})" class="px-2 py-1 rounded bg-slate-800">📋</button><button type="button" onclick="waTpl(${tp.id})" class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-200">💬</button><button type="button" onclick="delTemplate(${tp.id})" class="px-1.5 text-slate-500">✕</button></div></div>`).join('');
+}
+
+async function weeklyMemoryCleanup(){
+  if(!S.key){alert("Serve chiave Gemini.");return}
+  $('memReviewBox').classList.remove('hidden');$('memReviewOut').textContent="Analisi memoria per pulizia settimanale...";
+  try{
+    const schema={type:"OBJECT",properties:{proposal:{type:"STRING"},cleanedGeneral:{type:"STRING"}},required:["proposal","cleanedGeneral"]};
+    const raw=await callGemini("Analizza la memoria personale. Proponi cosa tenere, cosa spostare/eliminare (duplicati o cose vecchie) e restituisci cleanedGeneral ripulita.",[{role:"user",parts:[{text:`Memoria generale attuale:\n${S.memory||'vuota'}`}]}],true,800,schema);
+    const p=safeParseJson(raw);cleanedMemDraft=p.cleanedGeneral||S.memory;$('memReviewOut').innerHTML=formatRich(p.proposal||"Pronto.");
+  }catch(e){$('memReviewOut').textContent="Errore: "+e.message}
+}
+function applyCleanedMemory(){S.memory=cleanedMemDraft;$('memory').value=S.memory;$('memReviewBox').classList.add('hidden');syncSave();speak("Memoria ottimizzata.",true)}
+
+function exportBackupJson(){
+  const b=new Blob([JSON.stringify(exportState(),null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`jarvis_backup_${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),10000);
+}
+async function importBackupJson(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  try{const d=JSON.parse(await f.text());applyRemoteState(d);await syncSave();alert("Backup ripristinato e sincronizzato su Drive!")}catch(err){alert("File backup non valido: "+err.message)}
+}
+
+init();
+</script>
+</body>
+</html>
