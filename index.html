@@ -13,6 +13,25 @@
 .tb{color:#64748b}.tb.on{color:#22d3ee;background:rgba(6,182,212,.16);font-weight:700}.rb{background:rgba(2,6,23,.78);border:1px solid rgba(34,211,238,.2);border-radius:12px;padding:10px}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes spinR{to{transform:rotate(-360deg)}}@keyframes p1{0%,100%{box-shadow:0 0 22px rgba(34,211,238,.75)}50%{box-shadow:0 0 50px rgba(34,211,238,1)}}@keyframes p2{0%,100%{box-shadow:0 0 28px #f59e0b;transform:scale(1)}50%{box-shadow:0 0 68px #f59e0b;transform:scale(1.08)}}
 .ring{animation:spin 16s linear infinite}.ring2{animation:spinR 11s linear infinite}.idle{animation:p1 3s ease-in-out infinite}.listen{animation:p2 1s ease-in-out infinite;border-color:#f59e0b!important}.speak{animation:p1 .55s ease-in-out infinite}button:active{transform:scale(.97)}
+/* --- UI v7.7 --- */
+.card{border-radius:22px!important;box-shadow:0 0 0 1px rgba(34,211,238,.08),0 10px 30px -12px rgba(0,0,0,.7),0 0 26px rgba(6,182,212,.07)}
+.inp,.inp-d{transition:border-color .15s,box-shadow .15s}
+.inp:focus,.inp-d:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+button{transition:transform .08s,background-color .15s,border-color .15s,opacity .15s}
+.tile{min-height:52px}
+.tb{min-height:48px;border-radius:14px;position:relative}
+.tb.on::after{content:"";position:absolute;top:2px;left:35%;right:35%;height:2px;border-radius:2px;background:#22d3ee;box-shadow:0 0 8px #22d3ee}
+.sp{padding:8px 13px;font-size:11px}
+.rb{border-radius:14px}
+.fadein{animation:fin .22s ease-out}
+@keyframes fin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;max-width:90%;padding:9px 14px;border-radius:14px;font:600 11px 'JetBrains Mono',monospace;background:rgba(8,20,44,.96);border:1px solid rgba(34,211,238,.5);color:#a5f3fc;box-shadow:0 8px 24px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+#toast.err{border-color:rgba(251,113,133,.6);color:#fecdd3}
+#demoBadge{padding:2px 7px;border-radius:6px;font:700 9px 'JetBrains Mono',monospace;border:1px solid}
+#demoBadge.demo{background:rgba(245,158,11,.15);color:#fcd34d;border-color:rgba(245,158,11,.5)}
+#demoBadge.real{background:rgba(244,63,94,.15);color:#fda4af;border-color:rgba(244,63,94,.5)}
+::-webkit-scrollbar{width:0;height:0}
 </style></head>
 <body class="hud flex flex-col">
 
@@ -497,7 +516,74 @@ async function weeklyMemoryCleanup(){if(!S.key)return;$('memReviewBox').classLis
 function applyCleanedMemory(){S.memory=cleanedMemDraft;$('memory').value=S.memory;$('memReviewBox').classList.add('hidden');syncSave();speak("Memoria ottimizzata.",true)}
 function exportBackupJson(){const b=new Blob([JSON.stringify(exportState(),null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`jarvis_backup_${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),10000)}
 async function importBackupJson(e){const f=e.target.files[0];if(!f)return;e.target.value='';try{applyRemoteState(JSON.parse(await f.text()));await syncSave();alert("Backup ripristinato!")}catch(err){alert("Errore: "+err.message)}}
+/* ===== PATCH v7.7 ===== */
+(function(){
+  // --- Toast ---
+  const tEl=document.createElement('div');tEl.id='toast';document.body.appendChild(tEl);let tT=null;
+  window.toast=function(m,err){tEl.textContent=m;tEl.className='show'+(err?' err':'');clearTimeout(tT);tT=setTimeout(()=>{tEl.className=''},2600)};
 
+  // --- Conto trading DEMO / REALE (default: DEMO) ---
+  S.demoAcct=store.get('jarvis_demo_v1')!=='0';
+  function paintDemo(){const b=$('demoBadge');if(!b)return;b.textContent=S.demoAcct?'DEMO':'REALE';b.className=S.demoAcct?'demo':'real'}
+  $('driveBadge').insertAdjacentHTML('afterend','<button type="button" id="demoBadge" title="Conto MT5 demo/reale"></button>');
+  $('demoBadge').onclick=function(){
+    if(S.demoAcct&&!confirm("Confermi che il conto MetaTrader è REALE? Da ora i profitti potranno essere gestiti come soldi veri."))return;
+    S.demoAcct=!S.demoAcct;paintDemo();saveLocalOnly();syncSave();toast(S.demoAcct?'Conto MT5: DEMO':'Conto MT5: REALE')};
+  paintDemo();
+  const _exp=window.exportState;window.exportState=function(){const o=_exp();o.demoAccount=S.demoAcct;return o};
+  const _app=window.applyRemoteState;window.applyRemoteState=function(d){_app(d);if(d&&typeof d.demoAccount==='boolean'){S.demoAcct=d.demoAccount;paintDemo()}};
+  const _sav=window.saveLocalOnly;window.saveLocalOnly=function(){_sav();store.set('jarvis_demo_v1',S.demoAcct?'1':'0')};
+
+  // --- Campo chiamate + test chiamata nelle impostazioni ---
+  $('tgChatId').insertAdjacentHTML('afterend','<input id="callUser" type="text" placeholder="@username Telegram per le chiamate" class="inp w-full mono text-xs"><button type="button" onclick="testCall()" class="w-full py-1.5 rounded-lg bg-slate-800 text-amber-200 mono text-[10px]">📞 Test chiamata</button>');
+  window.testCall=async function(){await saveSettings();try{const r=await driveRequest("call_test",S.pin||FALLBACK_PIN);toast(r.ok?'📞 Chiamata partita':'Chiamata: '+(r.info||r.error||'errore'),!r.ok)}catch(e){toast('Errore: '+e.message,true)}};
+  const _rd=window.readSettingsInputs;window.readSettingsInputs=function(){_rd();S.pushCfg.callUser=$('callUser').value.trim()};
+  const _si=window.syncInputs;window.syncInputs=function(){_si();$('callUser').value=(S.pushCfg&&S.pushCfg.callUser)||""};
+
+  // --- Transizione tra le schede ---
+  const _tab=window.tab;window.tab=function(n){_tab(n);const el=$('tab-'+n);if(el){el.classList.remove('fadein');void el.offsetWidth;el.classList.add('fadein')}};
+
+  // --- Avviso se Drive non sincronizza ---
+  const _sdb=window.setDriveBadge;window.setDriveBadge=function(s){_sdb(s);if(s==='err')toast('☁ Drive non raggiungibile: dati salvati solo in locale',true)};
+
+  // --- Gemini: 3 tentativi per modello + modello di riserva + regola conto DEMO ---
+  const MODELS=["gemini-3.5-flash-lite","gemini-3.8-flash"];
+  window.callGemini=async function(sys,contents,useSchema=false,maxTokens=null,customSchema=null){
+    const demoRule=S.demoAcct
+      ?"\n\nCONTO TRADING MT5: DEMO. I risultati del journal sono simulati: quando l'utente dice TP preso, SL preso o un profitto di trade, registra SOLO in add_journal e NON creare mai add_expense. Il budget mensile riguarda solo soldi reali."
+      :"\n\nCONTO TRADING MT5: REALE.";
+    const body={contents:sanitizeContents(contents),generationConfig:{}};
+    if(sys)body.system_instruction={parts:[{text:sys+demoRule}]};
+    if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}
+    if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;
+    const models=[S.model||MODELS[0],...MODELS].filter((m,i,a)=>a.indexOf(m)===i);
+    let err=null,out=null;
+    outer:for(const model of models){
+      for(let i=0;i<3;i++){
+        const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
+        try{
+          $('status').textContent=`GEMINI ${model.toUpperCase()}${i?' · RIPROVO '+i:''}...`;
+          const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal});
+          const d=await r.json();
+          if(!r.ok||d.error){const e=new Error(d.error?.message||"HTTP "+r.status);e.skip=r.status===404;e.fatal=![404,429,500,502,503,504].includes(r.status);throw e}
+          out=d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||"";break outer;
+        }catch(e){err=e;if(e.fatal)throw e;if(e.skip)break;if(i<2)await new Promise(r=>setTimeout(r,1200*2**i))}
+        finally{clearTimeout(tm)}
+      }
+    }
+    if(out===null)throw new Error("Gemini sovraccarico, riprova tra un minuto. ("+(err?.message||"")+")");
+    // Rete di sicurezza DEMO: nessun guadagno di trading nel budget
+    if(S.demoAcct&&useSchema&&!customSchema){
+      try{
+        const last=[...contents].reverse().find(c=>c.role==='user'&&c.parts&&c.parts[0]&&c.parts[0].text&&!/^(RISULTATI WEB|DATI MTF|EMAIL NON LETTE)/.test(c.parts[0].text));
+        const ut=last?last.parts[0].text:"",p=JSON.parse(out);
+        if(Array.isArray(p.add_expense)&&p.add_expense.length&&/\b(tp|sl|take ?profit|stop ?loss|trade|trading|xau|xauusd|mt5|journal)\b/i.test(ut)&&!/prelev|ritir|bonifico/i.test(ut)){
+          p.add_expense=[];p.reply=(p.reply||"")+" (Conto DEMO: non ho toccato il budget.)";out=JSON.stringify(p)}
+      }catch(e){}
+    }
+    return out;
+  };
+})();
 init();
 </script>
 </body>
