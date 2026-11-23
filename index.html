@@ -306,7 +306,29 @@ function localAnswer(t){const l=t.toLowerCase(),n=new Date();if(/che ore|che ora
 const CHAT_SCHEMA={type:"OBJECT",properties:{reply:{type:"STRING"},web_query:{type:"STRING"},music_query:{type:"STRING"},analyze_sym:{type:"STRING"},analyze_tf:{type:"STRING"},read_emails:{type:"BOOLEAN"},reply_email_query:{type:"STRING"},trading_mode:{type:"BOOLEAN"},alarm_time:{type:"STRING"},reminder_text:{type:"STRING"},whatsapp_text:{type:"STRING"},add_journal:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},asset:{type:"STRING"},pnl:{type:"NUMBER"},note:{type:"STRING"}},required:["pnl"]}},add_expense:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},type:{type:"STRING",enum:["out","in"]},cat:{type:"STRING"},amount:{type:"NUMBER"},note:{type:"STRING"}},required:["type","amount"]}},add_grade:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},subj:{type:"STRING"},val:{type:"NUMBER"}},required:["subj","val"]}},add_tasks:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},repeat:{type:"STRING"},time:{type:"STRING"},category:{type:"STRING"},title:{type:"STRING"}},required:["time","category","title"]}},complete_tasks:{type:"ARRAY",items:{type:"STRING"}},delete_tasks:{type:"ARRAY",items:{type:"STRING"}},add_list_item:{type:"ARRAY",items:{type:"OBJECT",properties:{list:{type:"STRING"},item:{type:"STRING"}},required:["item"]}},add_habit:{type:"ARRAY",items:{type:"STRING"}},complete_habit:{type:"ARRAY",items:{type:"STRING"}},add_goal:{type:"ARRAY",items:{type:"OBJECT",properties:{period:{type:"STRING"},title:{type:"STRING"},steps:{type:"ARRAY",items:{type:"STRING"}}},required:["title"]}},set_savings_goal:{type:"OBJECT",properties:{title:{type:"STRING"},target:{type:"NUMBER"},deadline:{type:"STRING"}}},remember:{type:"ARRAY",items:{type:"STRING"}}},required:["reply"]};
 function sanitizeContents(arr){const clean=[];(arr||[]).forEach(turn=>{if(!turn||!turn.parts||!turn.parts.length)return;const role=turn.role==='model'?'model':'user';if(clean.length&&clean[clean.length-1].role===role)clean[clean.length-1]={role,parts:[...clean[clean.length-1].parts,...turn.parts]};else clean.push({role,parts:turn.parts})});while(clean.length&&clean[0].role!=='user')clean.shift();return clean}
 function safeParseJson(raw){return JSON.parse(String(raw||"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim())}
-async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSchema=null){const model=S.model||"gemini-3.5-flash-lite",url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,body={contents:sanitizeContents(contents),generationConfig:{}};if(sys)body.system_instruction={parts:[{text:sys}]};if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;let err=null;for(let i=0;i<2;i++){const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal});const raw=await r.text(),d=JSON.parse(raw);if(!r.ok||d.error)throw new Error(d.error?.message||"HTTP "+r.status);return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||""}catch(e){err=e;if(i===0)await new Promise(r=>setTimeout(r,1500))}finally{clearTimeout(tm)}}throw err}
+async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSchema=null){
+  const models=[S.model||"gemini-3.5-flash-lite",...["gemini-3.5-flash-lite","gemini-3.8-flash"]].filter((m,i,a)=>a.indexOf(m)===i);
+  const body={contents:sanitizeContents(contents),generationConfig:{}};
+  if(sys)body.system_instruction={parts:[{text:sys}]};
+  if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}
+  if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;
+  let err=null;
+  for(const model of models){
+    for(let i=0;i<3;i++){
+      const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
+      try{
+        $('status').textContent=`GEMINI ${model.toUpperCase()}${i?' · RIPROVO '+i:''}...`;
+        const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal});
+        const d=await r.json();
+        if(!r.ok||d.error){const e=new Error(d.error?.message||"HTTP "+r.status);e.fatal=![429,500,502,503,504].includes(r.status);throw e}
+        return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||"";
+      }catch(e){err=e;if(e.fatal)throw e;await new Promise(r=>setTimeout(r,1200*2**i))}
+      finally{clearTimeout(tm)}
+    }
+  }
+  throw new Error("Gemini sovraccarico, riprova tra un minuto. ("+(err?.message||"")+")");
+}
+
 function normalizeCat(c){const u=String(c||"").toUpperCase().trim();return VALID_CATS.includes(u)?u:"PERSONALE"}
 function sortTasks(){S.tasks.sort((a,b)=>(a.date||'9999-99-99').localeCompare(b.date||'9999-99-99')||a.time.localeCompare(b.time))}
 function bodyKey(s){return String(s||"").replace(/^[^:]+:\s*/,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
