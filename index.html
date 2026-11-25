@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="it" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="J.A.R.V.I.S."><meta name="theme-color" content="#020617"><title>J.A.R.V.I.S. // OS v7.8</title>
+<!DOCTYPE html><html lang="it" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="J.A.R.V.I.S."><meta name="theme-color" content="#020617"><title>J.A.R.V.I.S. // OS v7.9</title>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='38' fill='%23020617'/%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%2322d3ee' stroke-width='6' stroke-dasharray='14 8'/%3E%3Ccircle cx='90' cy='90' r='36' fill='%23083344' stroke='%2322d3ee' stroke-width='5'/%3E%3Ctext x='90' y='103' text-anchor='middle' fill='%2322d3ee' font-family='monospace' font-weight='bold' font-size='38'%3EJ%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -15,6 +15,8 @@
 .ring{animation:spin 18s linear infinite}.ring2{animation:spinR 12s linear infinite}.flt{animation:float3d 4s ease-in-out infinite}.listen{box-shadow:0 0 40px rgba(245,158,11,.55)!important}.speak{box-shadow:0 0 45px rgba(52,211,153,.55)!important}button:active{transform:scale(.97)}
 </style></head>
 <body class="hud flex flex-col">
+
+<audio id="jAudio" playsinline class="hidden"></audio>
 
 <div id="lock" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
   <div class="card rounded-3xl p-6 max-w-sm w-full space-y-4 text-center">
@@ -37,7 +39,7 @@
 <main class="flex-1 min-h-0 overflow-y-auto px-3 py-3 max-w-2xl w-full mx-auto space-y-3">
 
   <section id="tab-core" class="space-y-3">
-    <div id="keyBanner" class="hidden card amber rounded-2xl p-3 flex items-center justify-between gap-2"><div class="text-xs text-amber-200">🔑 Inserisci almeno una chiave AI gratuita in ⚙ (salvata sul tuo Drive).</div><button type="button" onclick="openSettings(true)" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shrink-0">Inserisci</button></div>
+    <div id="keyBanner" class="hidden card amber rounded-2xl p-3 flex items-center justify-between gap-2"><div class="text-xs text-amber-200">🔑 Inserisci una chiave AI gratuita in ⚙ (salvata sul tuo Drive).</div><button type="button" onclick="openSettings(true)" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shrink-0">Inserisci</button></div>
     <div id="dash" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
 
     <div class="card rounded-3xl p-4 flex flex-col items-center">
@@ -51,15 +53,16 @@
         </button>
       </div>
       <p id="micHint" class="text-[11px] text-slate-400 text-center mb-2"></p>
-      <div class="grid grid-cols-2 gap-1.5 w-full mb-2 text-[11px]">
-        <button id="wakeBtn" type="button" onclick="toggleWake()" class="p-2 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-200">👂 "Ehi Jarvis": OFF</button>
+      <div class="grid grid-cols-3 gap-1.5 w-full mb-2 text-[10px]">
+        <button id="wakeBtn" type="button" onclick="toggleWake()" class="p-2 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-200">👂 Ehi Jarvis: OFF</button>
         <button id="dlgBtn" type="button" onclick="toggleDialog()" class="p-2 rounded-xl bg-slate-900 border border-emerald-500/30 text-emerald-200">🗣 Dialogo: OFF</button>
+        <button id="mp3Btn" type="button" onclick="toggleMp3Voice()" class="p-2 rounded-xl bg-slate-900 border border-amber-500/30 text-amber-200">🔊 MP3 iOS: OFF</button>
       </div>
       <div class="grid grid-cols-3 gap-1.5 w-full mb-2 text-[11px]"><button type="button" onclick="morningBriefing()" class="p-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200">☀️ Mattino</button><button type="button" onclick="eveningReview()" class="p-2 rounded-xl bg-indigo-500/15 border border-indigo-400/40 text-indigo-200">🌙 Sera</button><button type="button" onclick="suggestOutings()" class="p-2 rounded-xl bg-fuchsia-500/15 border border-fuchsia-400/40 text-fuchsia-200">🍸 Uscite</button></div>
       <div class="grid grid-cols-2 gap-1.5 w-full text-[11px]"><button type="button" onclick="quick('Analizza XAUUSD su M15 con confluenza H4, notizie e livelli')" class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-100 text-left">📊 Analizza XAU M15</button><button type="button" onclick="quick('Quanto ho fatto in totale nel mio journal trading?')" class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-100 text-left">📈 Totale Trading</button><button type="button" onclick="tab('hub');hbSub('comm');loadEmails()" class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-100 text-left">📬 Leggi Gmail</button><button type="button" onclick="quick('Che materie ho domani così preparo lo zaino e quali compiti ho?')" class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-100 text-left">🎒 Zaino domani</button></div>
       <div class="grid grid-cols-4 gap-1.5 w-full mt-2 text-[10px]"><button type="button" onclick="openWhatsApp(agendaSummary())" class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200">💬 WhatsApp</button><button type="button" onclick="openExternal('demus://')" class="p-2 rounded-xl bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-200">🎵 Demus</button><button type="button" onclick="runShortcut('Jarvis Torcia')" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">🔦 Torcia</button><button type="button" onclick="openExternal('metatrader5://')" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">📱 MT5</button></div>
     </div>
-    <div class="card rounded-2xl p-4"><div class="flex justify-between border-b border-cyan-500/20 pb-2 mb-3"><span class="mono text-xs font-bold text-cyan-400">CANALE NEURALE</span><button type="button" onclick="clearChat()" class="mono text-[10px] text-slate-400">PULISCI</button></div><div id="chat" class="space-y-3 max-h-80 overflow-y-auto text-sm"></div><form onsubmit="sendText(event)" class="mt-3 flex gap-2"><input id="txt" type="text" placeholder="Chiedi, sposta impegni, segna spese/entrate..." autocomplete="off" class="inp-d flex-1 focus:outline-none"><button type="submit" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold">➤</button></form></div>
+    <div class="card rounded-2xl p-4"><div class="flex justify-between border-b border-cyan-500/20 pb-2 mb-3"><span class="mono text-xs font-bold text-cyan-400">CANALE NEURALE</span><button type="button" onclick="clearChat()" class="mono text-[10px] text-slate-400">PULISCI</button></div><div id="chat" class="space-y-3 max-h-80 overflow-y-auto text-sm"></div><form onsubmit="sendText(event)" class="mt-3 flex gap-2"><input id="txt" type="text" placeholder="Chiedi voti, trading, web/Reddit, impegni..." autocomplete="off" class="inp-d flex-1 focus:outline-none"><button type="submit" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold">➤</button></form></div>
   </section>
 
   <section id="tab-trading" class="hidden space-y-3">
@@ -155,13 +158,29 @@
   </section>
 
   <section id="tab-hub" class="hidden space-y-3">
-    <div class="flex gap-1.5 overflow-x-auto pb-1"><button id="hbp-comm" type="button" onclick="hbSub('comm')" class="sp on">📬 Gmail & Modelli</button><button id="hbp-mem" type="button" onclick="hbSub('mem')" class="sp">🧠 Memoria & Regole</button><button id="hbp-backup" type="button" onclick="hbSub('backup')" class="sp">💾 Backup & Locale</button></div>
+    <div class="flex gap-1.5 overflow-x-auto pb-1"><button id="hbp-comm" type="button" onclick="hbSub('comm')" class="sp on">📬 Gmail & Modelli</button><button id="hbp-skills" type="button" onclick="hbSub('skills')" class="sp">🌐 Agent-Reach & Strix</button><button id="hbp-mem" type="button" onclick="hbSub('mem')" class="sp">🧠 Memoria</button><button id="hbp-backup" type="button" onclick="hbSub('backup')" class="sp">💾 Backup</button></div>
     <div id="hb-comm" class="space-y-3">
       <div class="card rounded-2xl p-4 space-y-2.5"><div class="flex justify-between items-center"><h2 class="disp text-sm font-bold text-cyan-400">📬 GMAIL & TELEGRAM</h2><button type="button" onclick="loadEmails()" class="px-3 py-1.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-[11px]">📥 Leggi Email</button></div><div class="rb flex items-center justify-between text-xs"><span>Controllo automatico & permesso Telegram</span><button id="gmAutoBtn" type="button" onclick="toggleGmailAuto()" class="px-2.5 py-1 rounded-lg bg-emerald-400 text-slate-950 font-bold text-[10px]">ATTIVO</button></div><div id="pendingMailBox" class="hidden space-y-2"><div class="mono text-[10px] text-amber-300 font-bold">⏳ IN ATTESA DI PERMESSO:</div><div id="pendingMailList" class="space-y-2"></div></div><div id="gmailList" class="space-y-2 text-xs text-slate-300">Premi "Leggi Email" per i messaggi non letti.</div></div>
       <div class="card rounded-2xl p-4 space-y-2.5"><h2 class="disp text-sm font-bold text-cyan-400">✉️ RISPOSTA EMAIL</h2><textarea id="emIn" rows="3" placeholder="Incolla email..." class="inp-d text-xs"></textarea><div class="flex gap-2"><select id="emTone" class="inp flex-1 mono"><option value="formale">Formale</option><option value="amichevole">Amichevole</option><option value="breve">Breve</option></select><button type="button" onclick="draftEmailReply()" class="px-4 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Scrivi</button></div><div id="emOut" class="hidden rb text-xs whitespace-pre-line"></div><div id="emBtns" class="hidden flex gap-2"><button type="button" onclick="copyText($('emOut').textContent)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs">📋 Copia</button><button type="button" onclick="openWhatsApp($('emOut').textContent)" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 text-xs">💬 WhatsApp</button></div></div>
       <div class="card rounded-2xl p-4 space-y-2.5"><h2 class="disp text-sm font-bold text-amber-300">📄 RIASSUNTO TESTI</h2><textarea id="sumIn" rows="3" placeholder="Incolla testo lungo..." class="inp-d text-xs"></textarea><button type="button" onclick="summarizeLongText()" class="w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">Estrai Punti & Azioni</button><div id="sumOut" class="hidden rb text-xs whitespace-pre-line"></div><button id="sumAgBtn" type="button" onclick="addSummaryActionsToAgenda()" class="hidden w-full py-2 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs">📅 Aggiungi Azioni</button></div>
       <div class="card rounded-2xl p-4 space-y-2.5"><h2 class="disp text-sm font-bold text-cyan-400">⚡ MODELLI</h2><form onsubmit="addTemplate(event)" class="flex gap-2"><input id="tplKey" type="text" required placeholder="Parola" class="inp w-28 mono"><input id="tplText" type="text" required placeholder="Messaggio..." class="inp flex-1"><button type="submit" class="px-3 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+</button></form><div id="tplList" class="space-y-1.5"></div></div>
     </div>
+
+    <div id="hb-skills" class="hidden space-y-3">
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <h2 class="disp text-sm font-bold text-cyan-400">🌐 SKILL AGENT-REACH (WEB / REDDIT / GITHUB / YT)</h2>
+        <p class="text-[11px] text-slate-400">Legge siti (via Jina Reader), Reddit, repository GitHub e video YouTube senza chiavi API a pagamento.</p>
+        <div class="flex gap-2"><select id="arType" class="inp w-28 mono"><option value="web">Web/URL</option><option value="reddit">Reddit</option><option value="github">GitHub</option><option value="youtube">YouTube</option></select><input id="arQ" type="text" placeholder="URL o argomento (es: XAUUSD, owner/repo)..." class="inp flex-1"><button type="button" onclick="runAgentReach()" class="px-3.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">Leggi</button></div>
+        <div id="arOut" class="hidden rb text-xs whitespace-pre-line max-h-60 overflow-y-auto"></div>
+      </div>
+      <div class="card rounded-2xl p-4 space-y-2.5">
+        <div class="flex justify-between items-center"><h2 class="disp text-sm font-bold text-emerald-300">🛡 SKILL STRIX SECURITY AUDIT</h2><button type="button" onclick="auditJarvisSecurity()" class="px-3 py-1.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-[10px]">Audita Jarvis</button></div>
+        <textarea id="strixIn" rows="3" placeholder="Opzionale: incolla codice, JSON o link tua app da controllare per vulnerabilità (XSS, SSRF, chiavi esposte)..." class="inp-d text-xs"></textarea>
+        <button type="button" onclick="auditCustomCode()" class="w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs">🔍 Analizza Codice / URL (Difensivo)</button>
+        <div id="strixOut" class="hidden rb text-xs whitespace-pre-line"></div>
+      </div>
+    </div>
+
     <div id="hb-mem" class="hidden card rounded-2xl p-4 space-y-3">
       <div class="flex justify-between items-center"><h2 class="disp text-sm font-bold text-cyan-400">MEMORIA A SEZIONI</h2><button type="button" onclick="weeklyMemoryCleanup()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-200 mono text-[10px]">🧹 Pulizia AI</button></div>
       <div id="memReviewBox" class="hidden card amber rounded-xl p-3 space-y-2 text-xs"><div id="memReviewOut" class="whitespace-pre-line"></div><button type="button" onclick="applyCleanedMemory()" class="px-3 py-1.5 rounded-lg bg-emerald-400 text-slate-950 font-bold text-xs">✅ Applica</button></div>
@@ -169,7 +188,7 @@
       <label class="lbl">🧠 GENERALE</label><textarea id="memory" rows="4" class="inp-d mono text-xs"></textarea><label class="lbl">⚙ REGOLE JARVIS</label><textarea id="playbook" rows="5" class="inp-d mono text-xs"></textarea>
       <div class="grid grid-cols-2 gap-2"><button type="button" onclick="savePlaybook()" class="py-3 rounded-xl bg-cyan-400 text-slate-950 disp font-bold text-xs uppercase">Salva Tutto</button><button type="button" onclick="resetPlaybook()" class="py-3 rounded-xl border border-cyan-500/40 text-cyan-300 disp font-bold text-xs uppercase">Ripristina</button></div>
     </div>
-    <div id="hb-backup" class="hidden card rounded-2xl p-4 space-y-3"><h2 class="disp text-sm font-bold text-cyan-400">💾 BACKUP & MODALITÀ LOCALE</h2><p class="text-xs text-slate-300">Tutti i dati restano salvati in locale su questo dispositivo e sul tuo Google Drive privato (nessun server terzo).</p><button type="button" onclick="exportBackupJson()" class="w-full py-3 rounded-xl bg-cyan-400 text-slate-950 disp font-bold text-xs uppercase">⬇ Esporta Backup (.json)</button><label for="backupFile" class="block w-full py-3 rounded-xl border border-emerald-400/50 bg-emerald-500/15 text-emerald-200 text-center disp font-bold text-xs uppercase">⬆ Ripristina (.json)</label><input id="backupFile" type="file" accept=".json,application/json" class="hidden" onchange="importBackupJson(event)"></div>
+    <div id="hb-backup" class="hidden card rounded-2xl p-4 space-y-3"><h2 class="disp text-sm font-bold text-cyan-400">💾 BACKUP & PRIVACY</h2><p class="text-xs text-slate-300">Tutti i dati restano nel tuo dispositivo e sul tuo Google Drive privato (nessun server terzo).</p><button type="button" onclick="exportBackupJson()" class="w-full py-3 rounded-xl bg-cyan-400 text-slate-950 disp font-bold text-xs uppercase">⬇ Esporta Backup (.json)</button><label for="backupFile" class="block w-full py-3 rounded-xl border border-emerald-400/50 bg-emerald-500/15 text-emerald-200 text-center disp font-bold text-xs uppercase">⬆ Ripristina (.json)</label><input id="backupFile" type="file" accept=".json,application/json" class="hidden" onchange="importBackupJson(event)"></div>
   </section>
 </main>
 
@@ -217,24 +236,11 @@ const FIXED_RAW="MON|07:55|SCUOLA|Scuola (Liceo Scientifico);TUE|07:55|SCUOLA|Sc
 const TV_MAP={XAUUSD:"OANDA:XAUUSD",EURUSD:"FX:EURUSD",GBPUSD:"FX:GBPUSD",USDJPY:"FX:USDJPY",BTCUSD:"BITSTAMP:BTCUSD",NAS100:"PEPPERSTONE:NAS100"},TV_INT={"5m":"5","15m":"15","1h":"60","4h":"240","1d":"D"},CHK_ITEMS=["Trend H4 / M15 allineato","Livello chiave o liquidità pulita","Calendario Econ. / News OK","Risk/Reward almeno 1:2","Rischio max 1%","Zero FOMO"],DEFAULT_TPL=[{id:201,key:"ritardo",text:"Ciao, faccio qualche minuto di ritardo, arrivo subito!"},{id:202,key:"ok",text:"Perfetto, confermato per quell'orario. A dopo!"}];
 const DEFAULT_PLAYBOOK=`Sei J.A.R.V.I.S., assistente personale intelligente.\n- Chiama l'utente "Signore". Per compiti scolastici guida "Andrea" passo-passo.\n- Rispondi in italiano, breve e chiaro.\n- Soldi: distingui SEMPRE entrate ("in") e uscite ("out").\n- Trading: valuta H4+M15, oggettivo tra COMPRA/VENDI/ASPETTA, Entry, TP, SL e R/R.`;
 
-let S={memory:"",memSections:{trading:"",school:"",finance:"",tastes:""},tts:true,listening:false,tasks:[],charts:[],journal:[],expenses:[],grades:[],habits:[],lists:[],goals:[],templates:[...DEFAULT_TPL],pendingEmails:[],gmailAddr:"",gmailAuto:true,demoAccount:true,nightChartMonitor:true,nightVoiceCall:false,budgets:{Cibo:150,Uscite:120},savingsGoal:{title:"",target:0,saved:0,deadline:""},targetGrade:7.5,tradingCfg:{bal:1000,risk:1},pushCfg:{ntfyTopic:"",tgToken:"",tgChatId:"",callUser:""},voiceCfg:{name:"",rate:1.00,pitch:0.90},aiCfg:{preferred:"gemini",groqKey:"",cerebrasKey:"",customUrl:"",customKey:"",customModel:"",strictPrivacy:false},deletedIds:[],deletedTasks:[],deletedCharts:[],deletedJournal:[],playbook:DEFAULT_PLAYBOOK,history:[],key:"",model:"gemini-3.5-flash-lite",driveUrl:DEFAULT_DRIVE_URL,pin:"",driveLoaded:false,lastUpdatedAt:""};
+let S={memory:"",memSections:{trading:"",school:"",finance:"",tastes:""},tts:true,listening:false,tasks:[],charts:[],journal:[],expenses:[],grades:[],habits:[],lists:[],goals:[],templates:[...DEFAULT_TPL],pendingEmails:[],gmailAddr:"",gmailAuto:true,demoAccount:true,nightChartMonitor:true,nightVoiceCall:false,budgets:{Cibo:150,Uscite:120},savingsGoal:{title:"",target:0,saved:0,deadline:""},targetGrade:7.5,tradingCfg:{bal:1000,risk:1},pushCfg:{ntfyTopic:"",tgToken:"",tgChatId:"",callUser:""},voiceCfg:{name:"",rate:1.00,pitch:0.90,mp3:false},aiCfg:{preferred:"gemini",groqKey:"",cerebrasKey:"",customUrl:"",customKey:"",customModel:"",strictPrivacy:false},deletedIds:[],deletedTasks:[],deletedCharts:[],deletedJournal:[],playbook:DEFAULT_PLAYBOOK,history:[],key:"",model:"gemini-3.5-flash-lite",driveUrl:DEFAULT_DRIVE_URL,pin:"",driveLoaded:false,lastUpdatedAt:""};
 let rec=null,currentChartText="",currentJText="",chartTimer=null,isPulling=false,tvLoaded=false,econCache=[],gmailCache=[],calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),selectedDate="",jYear=calYear,jMonth=calMonth,selectedJDate="ALL",chkState=[false,false,false,false,false,false],csvParsedRows=[],studyPlanTasks=[],summaryActionTasks=[],cleanedMemDraft="",notifiedKeys={},quiz={active:false,subj:"",topic:"",step:0,history:[]},lastHomeworkSummary="",pom={sec:1500,running:false,iv:null,mode:25};
-let j3dMode="idle",wakeOn=false,dialogOn=false,activeDialog=false;
+let j3dMode="idle",wakeOn=false,dialogOn=false,activeDialog=false,voiceBusy=false,speakGuard=null;
 
-function init3D(){
-  const c=$('j3d');if(!c)return;const ctx=c.getContext('2d'),pts=[];
-  for(let i=0;i<96;i++){const y=1-(i/95)*2,r=Math.sqrt(1-y*y),th=i*2.39996;pts.push({x:Math.cos(th)*r,y,z:Math.sin(th)*r})}
-  let a=0;
-  (function loop(){
-    ctx.clearRect(0,0,128,128);
-    const spd=j3dMode==='think'?0.045:j3dMode==='speak'?0.028:j3dMode==='listen'?0.022:0.008;a+=spd;
-    const col=j3dMode==='listen'?'245,158,11':j3dMode==='think'?'168,85,247':j3dMode==='speak'?'52,211,153':'34,211,238';
-    const g=ctx.createRadialGradient(64,64,4,64,64,52);g.addColorStop(0,`rgba(${col},.35)`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(64,64,52,0,6.28);ctx.fill();
-    const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(a*.45),sb=Math.sin(a*.45);
-    pts.map(p=>{const x1=p.x*ca-p.z*sa,z1=p.x*sa+p.z*ca,y2=p.y*cb-z1*sb,z2=p.y*sb+z1*cb,sc=44/(2.2-z2);return{x:64+x1*sc,y:64+y2*sc,z:z2}}).sort((u,v)=>u.z-v.z).forEach(p=>{const al=0.25+(p.z+1)*0.37,sz=1.2+(p.z+1)*1.1;ctx.fillStyle=`rgba(${col},${al.toFixed(2)})`;ctx.beginPath();ctx.arc(p.x,p.y,sz,0,6.28);ctx.fill()});
-    requestAnimationFrame(loop);
-  })();
-}
+function init3D(){const c=$('j3d');if(!c)return;const ctx=c.getContext('2d'),pts=[];for(let i=0;i<96;i++){const y=1-(i/95)*2,r=Math.sqrt(1-y*y),th=i*2.39996;pts.push({x:Math.cos(th)*r,y,z:Math.sin(th)*r})}let a=0;(function loop(){ctx.clearRect(0,0,128,128);const spd=j3dMode==='think'?0.045:j3dMode==='speak'?0.028:j3dMode==='listen'?0.022:0.008;a+=spd;const col=j3dMode==='listen'?'245,158,11':j3dMode==='think'?'168,85,247':j3dMode==='speak'?'52,211,153':'34,211,238',g=ctx.createRadialGradient(64,64,4,64,64,52);g.addColorStop(0,`rgba(${col},.35)`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(64,64,52,0,6.28);ctx.fill();const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(a*.45),sb=Math.sin(a*.45);pts.map(p=>{const x1=p.x*ca-p.z*sa,z1=p.x*sa+p.z*ca,y2=p.y*cb-z1*sb,z2=p.y*sb+z1*cb,sc=44/(2.2-z2);return{x:64+x1*sc,y:64+y2*sc,z:z2}}).sort((u,v)=>u.z-v.z).forEach(p=>{const al=0.25+(p.z+1)*0.37,sz=1.2+(p.z+1)*1.1;ctx.fillStyle=`rgba(${col},${al.toFixed(2)})`;ctx.beginPath();ctx.arc(p.x,p.y,sz,0,6.28);ctx.fill()});requestAnimationFrame(loop)})()}
 
 function isoOffset(d){const n=new Date();n.setDate(n.getDate()+d);return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`}
 const todayISO=()=>isoOffset(0),tomorrowISO=()=>isoOffset(1);
@@ -248,7 +254,7 @@ function init(){
   const ld=(k,d)=>{const v=store.get(k);if(v)try{return JSON.parse(v)}catch(e){}return d};
   S.tasks=ld('jarvis_tasks_openai_v2',[]);S.charts=ld('jarvis_charts_v1',[]);S.journal=ld('jarvis_journal_v1',[]);S.expenses=ld('jarvis_expenses_v1',[]);S.grades=ld('jarvis_grades_v1',[]);S.habits=ld('jarvis_habits_v1',[]);S.lists=ld('jarvis_lists_v1',[]);S.goals=ld('jarvis_goals_v1',[]);S.templates=ld('jarvis_tpl_v1',DEFAULT_TPL);S.pendingEmails=ld('jarvis_pendmail_v1',[]);S.gmailAddr=store.get('jarvis_gmail_v1')||"";S.gmailAuto=store.get('jarvis_gmauto_v1')!=='0';
   S.demoAccount=store.get('jarvis_demo_v1')!=='0';S.nightChartMonitor=store.get('jarvis_night_v1')!=='0';S.nightVoiceCall=store.get('jarvis_ncall_v1')==='1';
-  S.budgets=ld('jarvis_budgets_v1',{Cibo:150,Uscite:120});S.savingsGoal=ld('jarvis_sav_v1',{title:"",target:0,saved:0,deadline:""});S.memSections=ld('jarvis_memsec_v1',{trading:"",school:"",finance:"",tastes:""});S.tradingCfg=ld('jarvis_trcfg_v1',{bal:1000,risk:1});S.pushCfg=ld('jarvis_pushcfg_v1',{ntfyTopic:"",tgToken:"",tgChatId:"",callUser:""});S.voiceCfg=ld('jarvis_voice_v1',{name:"",rate:1.00,pitch:0.90});S.aiCfg=ld('jarvis_aicfg_v1',{preferred:"gemini",groqKey:"",cerebrasKey:"",customUrl:"",customKey:"",customModel:"",strictPrivacy:false});
+  S.budgets=ld('jarvis_budgets_v1',{Cibo:150,Uscite:120});S.savingsGoal=ld('jarvis_sav_v1',{title:"",target:0,saved:0,deadline:""});S.memSections=ld('jarvis_memsec_v1',{trading:"",school:"",finance:"",tastes:""});S.tradingCfg=ld('jarvis_trcfg_v1',{bal:1000,risk:1});S.pushCfg=ld('jarvis_pushcfg_v1',{ntfyTopic:"",tgToken:"",tgChatId:"",callUser:""});S.voiceCfg=ld('jarvis_voice_v1',{name:"",rate:1.00,pitch:0.90,mp3:false});S.aiCfg=ld('jarvis_aicfg_v1',{preferred:"gemini",groqKey:"",cerebrasKey:"",customUrl:"",customKey:"",customModel:"",strictPrivacy:false});
   S.deletedIds=ld('jarvis_del_ids_v1',[]);S.deletedTasks=ld('jarvis_del_tasks_v1',[]);S.deletedCharts=ld('jarvis_del_charts_v1',[]);S.deletedJournal=ld('jarvis_del_journal_v1',[]);S.history=ld('jarvis_history_v1',[]);ensureWeeklyFixed();
   S.playbook=store.get('jarvis_playbook_openai_v2')||DEFAULT_PLAYBOOK;S.key=store.get('jarvis_gemini_key_v1')||"";S.model=store.get('jarvis_gemini_model_v1')||"gemini-3.5-flash-lite";S.memory=store.get('jarvis_memory_openai_v2')||"";S.driveUrl=store.get('jarvis_drive_url_v1')||DEFAULT_DRIVE_URL;S.tts=store.get('jarvis_tts_v1')!=='0';
   $('tDate').value=selectedDate;$('jDate').value=selectedDate;$('gDate').value=selectedDate;$('stDate').value=isoOffset(5);$('savDate').value=isoOffset(90);
@@ -258,7 +264,7 @@ function init(){
 }
 
 function populateVoices(){const sel=$('voiceSelect');if(!sel||!('speechSynthesis'in window))return;const vs=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('it')),all=vs.length?vs:speechSynthesis.getVoices();sel.innerHTML='<option value="">Automatica (Migliore)</option>'+all.map(v=>`<option value="${esc(v.name)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');if(S.voiceCfg.name)sel.value=S.voiceCfg.name}
-function testVoice(){S.voiceCfg={name:$('voiceSelect').value,rate:parseFloat($('voiceRate').value)||1,pitch:parseFloat($('voicePitch').value)||0.9};saveLocalOnly();speak("Buongiorno Signore, tutti i sistemi vocali sono calibrati con la massima enfasi.",true)}
+function testVoice(){S.voiceCfg={name:$('voiceSelect').value,rate:parseFloat($('voiceRate').value)||1,pitch:parseFloat($('voicePitch').value)||0.9,mp3:!!S.voiceCfg.mp3};saveLocalOnly();speak("Buongiorno Signore, tutti i sistemi vocali sono calibrati con la massima enfasi.",true)}
 function renderAll(){renderDash();renderAgenda();renderJournal();renderChartsHistory();renderChecklist();calcLots();renderMoney();renderGoals();renderHabitsLists();renderGrades();renderTemplates();renderPendingEmails()}
 function initTV(){const box=$('tvBox');if(!box)return;const sym=TV_MAP[$('trSym').value]||"OANDA:XAUUSD",tf=TV_INT[$('trTf').value]||"15";box.innerHTML='<div class="tradingview-widget-container" style="height:310px;width:100%"><div class="tradingview-widget-container__widget" style="height:310px;width:100%"></div></div>';const s=document.createElement('script');s.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';s.async=true;s.appendChild(document.createTextNode(JSON.stringify({autosize:true,symbol:sym,interval:tf,timezone:"Europe/Rome",theme:"dark",style:"1",locale:"it",allow_symbol_change:true,studies:["STD;EMA","STD;RSI"],support_host:"https://www.tradingview.com"})));box.firstChild.appendChild(s);tvLoaded=true}
 
@@ -272,7 +278,7 @@ function syncInputs(){
   $('voiceRate').value=S.voiceCfg.rate||1;$('voiceRateVal').textContent=(S.voiceCfg.rate||1).toFixed(2);$('voicePitch').value=S.voiceCfg.pitch||0.9;$('voicePitchVal').textContent=(S.voiceCfg.pitch||0.9).toFixed(2);
   if($('voiceSelect').options.length)$('voiceSelect').value=S.voiceCfg.name||"";
   $('savTitle').value=S.savingsGoal.title||"";$('savTarget').value=S.savingsGoal.target||"";$('savSaved').value=S.savingsGoal.saved||"";if(S.savingsGoal.deadline)$('savDate').value=S.savingsGoal.deadline;
-  tgBtn($('ttsBtn'),S.tts,'ATTIVE','SPENTE');$('keyBanner').classList.toggle('hidden',hasAnyAiKey());
+  tgBtn($('ttsBtn'),S.tts,'ATTIVE','SPENTE');$('keyBanner').classList.toggle('hidden',hasAnyAiKey());updateVoiceBtns();
 }
 function hasAnyAiKey(){return Boolean(S.key||S.aiCfg.groqKey||S.aiCfg.cerebrasKey||S.aiCfg.customKey)}
 function tick(){const n=new Date();$('clock').textContent=n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});$('date').textContent=n.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}
@@ -316,61 +322,110 @@ async function unlock(){
   catch(err){if(FALLBACK_PIN&&entered===FALLBACK_PIN){S.pin=entered;setDriveBadge('err');$('lock').classList.add('hidden');primeAudio();renderChatHistory();addMsg('jarvis',"⚠️ Drive non raggiungibile. Modalità locale attiva.")}else{msg.textContent="Errore: "+err.message;msg.classList.remove('hidden')}}
   btn.disabled=false;btn.textContent="Inizializza Sistema";
 }
-function renderChatHistory(){$('chat').innerHTML='';if(S.history.length)S.history.forEach(i=>{const t=i.parts?.[0]?.text||"";if(t)addMsg(i.role==='user'?'user':'jarvis',t)});else addMsg('jarvis',hasAnyAiKey()?"Sistemi 3D e Multi-AI pronti, Signore.":"Drive collegato! Inserisci la chiave AI dal banner sopra.")}
+function renderChatHistory(){$('chat').innerHTML='';if(S.history.length)S.history.forEach(i=>{const t=i.parts?.[0]?.text||"";if(t)addMsg(i.role==='user'?'user':'jarvis',t)});else addMsg('jarvis',hasAnyAiKey()?"Sistemi 3D, Dialogo e Skill pronti, Signore.":"Drive collegato! Inserisci la chiave AI dal banner sopra.")}
 function tab(n){['core','trading','money','agenda','school','hub'].forEach(t=>{$('tab-'+t).classList.add('hidden');$('nav-'+t).classList.remove('on')});$('tab-'+n).classList.remove('hidden');$('nav-'+n).classList.add('on');if(n==='trading'){if(!tvLoaded)initTV();if(!econCache.length&&S.driveUrl)loadEconCal(false)}if(S.driveLoaded)pullFromDrive(false)}
 function trSub(s){['live','journal','econ'].forEach(x=>{$('tr-'+x).classList.toggle('hidden',x!==s);$('trp-'+x).classList.toggle('on',x===s)});if(s==='econ'&&!econCache.length)loadEconCal(true)}
 function mnSub(s){['expenses','csv','budget'].forEach(x=>{$('mn-'+x).classList.toggle('hidden',x!==s);$('mnp-'+x).classList.toggle('on',x===s)})}
 function agSub(s){['cal','goals','lists'].forEach(x=>{$('ag-'+x).classList.toggle('hidden',x!==s);$('agp-'+x).classList.toggle('on',x===s)})}
 function scSub(s){['plan','quiz','photo'].forEach(x=>{$('sc-'+x).classList.toggle('hidden',x!==s);$('scp-'+x).classList.toggle('on',x===s)})}
-function hbSub(s){['comm','mem','backup'].forEach(x=>{$('hb-'+x).classList.toggle('hidden',x!==s);$('hbp-'+x).classList.toggle('on',x===s)})}
+function hbSub(s){['comm','skills','mem','backup'].forEach(x=>{$('hb-'+x).classList.toggle('hidden',x!==s);$('hbp-'+x).classList.toggle('on',x===s)})}
 
-function readSettingsInputs(){S.key=$('apiKey').value.trim();S.model=$('modelSelect').value||"gemini-3.5-flash-lite";S.driveUrl=$('driveUrl').value.trim()||DEFAULT_DRIVE_URL;S.gmailAddr=$('gmailAddr').value.trim();S.pushCfg={ntfyTopic:$('ntfyTopic').value.trim(),tgToken:$('tgToken').value.trim(),tgChatId:$('tgChatId').value.trim(),callUser:$('callUser').value.trim()};S.voiceCfg={name:$('voiceSelect').value,rate:parseFloat($('voiceRate').value)||1,pitch:parseFloat($('voicePitch').value)||0.9};S.aiCfg={preferred:$('aiPref').value||"gemini",groqKey:$('groqKey').value.trim(),cerebrasKey:$('cerebrasKey').value.trim(),customUrl:$('customUrl').value.trim(),customKey:$('customKey').value.trim(),customModel:$('customModel').value.trim(),strictPrivacy:S.aiCfg.strictPrivacy}}
+function readSettingsInputs(){S.key=$('apiKey').value.trim();S.model=$('modelSelect').value||"gemini-3.5-flash-lite";S.driveUrl=$('driveUrl').value.trim()||DEFAULT_DRIVE_URL;S.gmailAddr=$('gmailAddr').value.trim();S.pushCfg={ntfyTopic:$('ntfyTopic').value.trim(),tgToken:$('tgToken').value.trim(),tgChatId:$('tgChatId').value.trim(),callUser:$('callUser').value.trim()};S.voiceCfg={name:$('voiceSelect').value,rate:parseFloat($('voiceRate').value)||1,pitch:parseFloat($('voicePitch').value)||0.9,mp3:!!S.voiceCfg.mp3};S.aiCfg={preferred:$('aiPref').value||"gemini",groqKey:$('groqKey').value.trim(),cerebrasKey:$('cerebrasKey').value.trim(),customUrl:$('customUrl').value.trim(),customKey:$('customKey').value.trim(),customModel:$('customModel').value.trim(),strictPrivacy:S.aiCfg.strictPrivacy}}
 function openSettings(f=false){populateVoices();$('settings').classList.remove('hidden');if(f)setTimeout(()=>$('apiKey').focus(),120)}
 function closeSettings(){$('settings').classList.add('hidden')}
 async function saveSettings(){const nd=$('driveUrl').value.trim()||DEFAULT_DRIVE_URL,nk=$('apiKey').value.trim(),need=nd&&(!S.driveLoaded||nd!==S.driveUrl);readSettingsInputs();updateStatus();closeSettings();if(need){setDriveBadge('saving');try{const res=await driveRequest("load",S.pin||FALLBACK_PIN);if(!res.ok){setDriveBadge('err');return}S.driveLoaded=true;if(hasRemoteContent(res.data)){applyRemoteState(res.data);if(nk)S.key=nk;syncInputs();updateStatus();renderChatHistory();await syncSave();return}}catch(e){setDriveBadge('err');return}}await syncSave();addMsg('jarvis',"Impostazioni salvate su Drive, Signore.")}
-function toggleTTS(){S.tts=!S.tts;syncInputs();if(!S.tts)try{speechSynthesis.cancel()}catch(e){}syncSave()}
+function toggleTTS(){S.tts=!S.tts;syncInputs();if(!S.tts)stopAllSpeech();syncSave()}
 function savePlaybook(){S.memory=$('memory').value.trim();S.memSections={trading:$('memTrading').value.trim(),school:$('memSchool').value.trim(),finance:$('memFinance').value.trim(),tastes:$('memTastes').value.trim()};S.playbook=$('playbook').value.trim()||DEFAULT_PLAYBOOK;syncSave();speak("Profilo salvato.",true)}
 function resetPlaybook(){$('playbook').value=DEFAULT_PLAYBOOK;savePlaybook()}
-function primeAudio(){try{if(!('speechSynthesis'in window))return;const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
 
-/* ---- VOCE CONTINUA, WAKE WORD "EHI JARVIS" & SFERA 3D ---- */
-function setCoreMode(m){j3dMode=m;$('reactor').classList.toggle('listen',m==='listen');$('reactor').classList.toggle('speak',m==='speak');$('micLabel').textContent=m==='listen'?"ASCOLTO":m==='think'?"PENSO":m==='speak'?"PARLO":wakeOn?"EHI JARVIS":"PARLA"}
-function updateVoiceBtns(){$('wakeBtn').textContent=`👂 "Ehi Jarvis": ${wakeOn?'ON':'OFF'}`;$('wakeBtn').className="p-2 rounded-xl border text-[11px] "+(wakeOn?"bg-amber-400 text-slate-950 border-amber-300 font-bold":"bg-slate-900 border-cyan-500/30 text-cyan-200");$('dlgBtn').textContent=`🗣 Dialogo: ${dialogOn?'ON':'OFF'}`;$('dlgBtn').className="p-2 rounded-xl border text-[11px] "+(dialogOn?"bg-emerald-400 text-slate-950 border-emerald-300 font-bold":"bg-slate-900 border-emerald-500/30 text-emerald-200")}
-function toggleWake(){primeAudio();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame){alert("Su iPhone/iPad per 'Ehi Jarvis' diretto aprilo dall'icona Home (GitHub Pages). Qui puoi usare la dettatura 🎙 sulla tastiera.");return}wakeOn=!wakeOn;if(!wakeOn&&!activeDialog&&rec){try{rec.stop()}catch(e){}}updateVoiceBtns();setCoreMode('idle');if(wakeOn)startMic(true)}
-function toggleDialog(){primeAudio();dialogOn=!dialogOn;updateVoiceBtns();if(dialogOn&&!S.listening)startMic(false)}
-function speak(t,f=false,onDone=null){
-  if((!S.tts&&!f)||!('speechSynthesis'in window)||!t){if(onDone)onDone();return}
+/* ---- MOTORE VOCALE iOS ANTI-MUTO & DIALOGO CONTINUO ---- */
+function primeAudio(){
   try{
-    if(speechSynthesis.speaking)speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(t.replace(/[*#_`]/g,'').replace(/\n+/g,'. '));u.lang='it-IT';u.rate=S.voiceCfg.rate||1.0;u.pitch=S.voiceCfg.pitch||0.9;
-    const vs=speechSynthesis.getVoices();let v=S.voiceCfg.name?vs.find(x=>x.name===S.voiceCfg.name):null;if(!v)v=vs.find(x=>x.lang.startsWith('it')&&/luca|migliorata|premium|enhanced/i.test(x.name))||vs.find(x=>x.lang.startsWith('it'));if(v)u.voice=v;
-    u.onstart=()=>setCoreMode('speak');
-    u.onend=u.onerror=()=>{setCoreMode('idle');if(onDone)onDone();else if((dialogOn&&activeDialog)||wakeOn)setTimeout(()=>startMic(wakeOn&&!activeDialog),350)};
-    speechSynthesis.speak(u);
-  }catch(e){if(onDone)onDone()}
+    const a=$('jAudio');if(a&&!a.dataset.ok){a.src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";a.play().then(()=>{a.pause();a.dataset.ok='1'}).catch(()=>{})}
+    if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(" ");u.volume=0;window._utt=u;speechSynthesis.speak(u)}
+  }catch(e){}
 }
-function toggleMic(){primeAudio();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame)return fallbackDictation();if(S.listening){activeDialog=false;try{rec.stop()}catch(e){}return}activeDialog=true;startMic(false)}
+function stopAllSpeech(){
+  clearTimeout(speakGuard);
+  try{if('speechSynthesis'in window)speechSynthesis.cancel()}catch(e){}
+  try{const a=$('jAudio');if(a){a.pause();a.currentTime=0}}catch(e){}
+}
+function stopMic(){
+  if(rec){try{rec.onend=null;rec.onresult=null;rec.onerror=null;rec.abort()}catch(e){}rec=null}
+  S.listening=false;
+}
+function setCoreMode(m){j3dMode=m;$('reactor').classList.toggle('listen',m==='listen');$('reactor').classList.toggle('speak',m==='speak');$('micLabel').textContent=m==='listen'?"ASCOLTO":m==='think'?"PENSO":m==='speak'?"PARLO":wakeOn?"EHI JARVIS":"PARLA"}
+function updateVoiceBtns(){
+  $('wakeBtn').textContent=`👂 Ehi Jarvis: ${wakeOn?'ON':'OFF'}`;$('wakeBtn').className="p-2 rounded-xl border text-[10px] "+(wakeOn?"bg-amber-400 text-slate-950 border-amber-300 font-bold":"bg-slate-900 border-cyan-500/30 text-cyan-200");
+  $('dlgBtn').textContent=`🗣 Dialogo: ${dialogOn?'ON':'OFF'}`;$('dlgBtn').className="p-2 rounded-xl border text-[10px] "+(dialogOn?"bg-emerald-400 text-slate-950 border-emerald-300 font-bold":"bg-slate-900 border-emerald-500/30 text-emerald-200");
+  $('mp3Btn').textContent=`🔊 MP3 iOS: ${S.voiceCfg.mp3?'ON':'OFF'}`;$('mp3Btn').className="p-2 rounded-xl border text-[10px] "+(S.voiceCfg.mp3?"bg-cyan-400 text-slate-950 border-cyan-300 font-bold":"bg-slate-900 border-amber-500/30 text-amber-200");
+}
+function toggleMp3Voice(){primeAudio();S.voiceCfg.mp3=!S.voiceCfg.mp3;updateVoiceBtns();saveLocalOnly();speak(S.voiceCfg.mp3?"Voce MP3 ad alta chiarezza attivata, Signore.":"Voce di sistema attivata.",true)}
+function toggleWake(){primeAudio();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame){alert("Su iPhone/iPad aprilo dalla Home (GitHub Pages) per 'Ehi Jarvis'.");return}wakeOn=!wakeOn;if(!wakeOn&&!activeDialog)stopMic();updateVoiceBtns();setCoreMode('idle');if(wakeOn)startMic(true)}
+function toggleDialog(){primeAudio();dialogOn=!dialogOn;activeDialog=dialogOn;updateVoiceBtns();if(dialogOn&&!S.listening&&!voiceBusy)startMic(false);else if(!dialogOn&&!wakeOn)stopMic()}
+
+async function speak(t,f=false,onDone=null){
+  const finish=()=>{clearTimeout(speakGuard);setCoreMode('idle');if(onDone)onDone();else if(!voiceBusy&&((dialogOn&&activeDialog)||wakeOn))setTimeout(()=>startMic(wakeOn&&!activeDialog),400)};
+  if((!S.tts&&!f)||!t){finish();return}
+  stopMic();
+  const clean=String(t).replace(/[*#_`]/g,'').replace(/https?:\/\/\S+/g,'link').replace(/\n+/g,'. ').trim();
+  if(!clean){finish();return}
+
+  if(S.voiceCfg.mp3&&S.driveUrl){
+    try{
+      setCoreMode('speak');
+      const r=await driveRequest("tts_mp3",S.pin||FALLBACK_PIN,{text:clean.slice(0,550)});
+      if(r.ok&&r.b64){
+        const a=$('jAudio');a.src="data:audio/mpeg;base64,"+r.b64;
+        let done=false;const end=()=>{if(done)return;done=true;a.onended=a.onerror=null;finish()};
+        a.onended=end;a.onerror=end;speakGuard=setTimeout(end,Math.max(4000,clean.length*95));
+        await a.play();return;
+      }
+    }catch(e){}
+  }
+
+  if(!('speechSynthesis'in window)){finish();return}
+  setTimeout(()=>{
+    try{
+      if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+      setTimeout(()=>{
+        const u=new SpeechSynthesisUtterance(clean);window._utt=u;
+        u.lang='it-IT';u.rate=S.voiceCfg.rate||1.0;u.pitch=S.voiceCfg.pitch||0.9;
+        const vs=speechSynthesis.getVoices();let v=S.voiceCfg.name?vs.find(x=>x.name===S.voiceCfg.name):null;
+        if(!v)v=vs.find(x=>x.lang.startsWith('it')&&/luca|migliorata|premium|enhanced/i.test(x.name))||vs.find(x=>x.lang.startsWith('it'));
+        if(v)u.voice=v;
+        let done=false;const end=()=>{if(done)return;done=true;u.onend=u.onerror=null;finish()};
+        u.onstart=()=>setCoreMode('speak');u.onend=end;u.onerror=end;
+        speakGuard=setTimeout(end,Math.max(3500,clean.length*90));
+        speechSynthesis.resume();speechSynthesis.speak(u);
+      },90);
+    }catch(e){finish()}
+  },320);
+}
+
+function toggleMic(){primeAudio();stopAllSpeech();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame)return fallbackDictation();if(S.listening){activeDialog=false;stopMic();setCoreMode('idle');return}activeDialog=true;dialogOn=true;updateVoiceBtns();startMic(false)}
 function startMic(isWake){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame||S.listening)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||inFrame||S.listening||voiceBusy)return;
   try{
-    if(speechSynthesis.speaking)speechSynthesis.cancel();
     rec=new SR();rec.lang='it-IT';rec.interimResults=false;rec.maxAlternatives=1;
     rec.onstart=()=>{S.listening=true;setCoreMode(isWake?'idle':'listen')};
-    rec.onend=()=>{S.listening=false;if(j3dMode==='listen')setCoreMode('idle');if(wakeOn&&!activeDialog&&!speechSynthesis.speaking&&j3dMode==='idle')setTimeout(()=>startMic(true),600)};
+    rec.onend=()=>{S.listening=false;if(j3dMode==='listen')setCoreMode('idle');if(!voiceBusy&&((wakeOn&&!activeDialog)||(dialogOn&&activeDialog))&&!speechSynthesis.speaking)setTimeout(()=>startMic(wakeOn&&!activeDialog),450)};
     rec.onresult=e=>{
       const t=e.results[0][0].transcript.trim(),tl=t.toLowerCase();
+      stopMic();
       if(isWake&&!activeDialog){
         const m=tl.match(/\b(?:ehi|ciao|sveglia|ok|hey)\s+jarvis\b[,\s]*(.*)/i);
-        if(!m)return;
+        if(!m){setTimeout(()=>{if(wakeOn&&!voiceBusy)startMic(true)},250);return}
         activeDialog=true;dialogOn=true;updateVoiceBtns();pomBeep();
         const cmd=(m[1]||"").trim();
         if(cmd){addMsg('user',cmd);process(cmd)}else{addMsg('jarvis',"Dimmi, Signore.");speak("Dimmi, Signore.",true)}
         return;
       }
-      if(/^(basta|stop dialogo|chiudi dialogo|zitto jarvis|arrivederci)$/i.test(tl)){activeDialog=false;dialogOn=false;updateVoiceBtns();speak("Agli ordini, Signore.",true);return}
+      if(/^(ehi|ciao|ok|sveglia)\s+jarvis[.!]?$/i.test(tl)){addMsg('jarvis',"Dimmi, Signore.");speak("Dimmi, Signore.",true);return}
+      if(/^(basta|stop|stop dialogo|chiudi dialogo|zitto jarvis|arrivederci|fine dialogo)$/i.test(tl)){activeDialog=false;dialogOn=false;updateVoiceBtns();speak("Agli ordini, Signore.",true);return}
       addMsg('user',t);process(t);
     };
-    rec.onerror=e=>{S.listening=false;setCoreMode('idle');if(e.error==='not-allowed'||e.error==='service-not-allowed'){wakeOn=false;dialogOn=false;updateVoiceBtns();fallbackDictation()}};
+    rec.onerror=e=>{S.listening=false;setCoreMode('idle');if(e.error==='not-allowed'||e.error==='service-not-allowed'){wakeOn=false;dialogOn=false;activeDialog=false;updateVoiceBtns();fallbackDictation()}};
     rec.start();
   }catch(e){fallbackDictation()}
 }
@@ -395,13 +450,23 @@ function agendaSummary(){const d=(selectedDate&&selectedDate!=='ALL')?selectedDa
 function journalStats(){const tod=todayISO(),mo=tod.slice(0,7);let tot=0,todT=0,moT=0,w=0,l=0;S.journal.forEach(j=>{const p=Number(j.pnl)||0;tot+=p;if(j.date===tod)todT+=p;if((j.date||'').startsWith(mo))moT+=p;if(p>0)w++;else if(p<0)l++});return{tot,todT,moT,w,l,wr:S.journal.length?Math.round(w*100/S.journal.length):0,count:S.journal.length}}
 function moneyStats(){const mo=todayISO().slice(0,7);let inn=0,out=0,byCat={};S.expenses.forEach(x=>{if((x.date||'').startsWith(mo)){const a=+x.amount||0;if(x.type==='in')inn+=a;else{out+=a;const c=x.cat||'Altro';byCat[c]=(byCat[c]||0)+a}}});return{inn,out,bal:inn-out,byCat}}
 function renderDash(){const t=todayISO(),n=new Date(),hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),js=journalStats(),ms=moneyStats(),nx=tasksForDate(t).filter(x=>!isTaskDone(x,t)&&x.time>=hm).sort((a,b)=>a.time.localeCompare(b.time))[0],ver=S.tasks.filter(x=>x.date&&x.date>=t&&!x.done&&/verific|interrog/i.test(x.title)).sort((a,b)=>a.date.localeCompare(b.date))[0],dd=ver?Math.round((new Date(ver.date+'T12:00:00')-new Date(t+'T12:00:00'))/864e5):0,sg=v=>(v>=0?'+':'')+v.toFixed(0);$('dash').innerHTML=`<button type="button" onclick="tab('agenda')" class="tile text-left"><div class="mono text-[9px] text-slate-400">PROSSIMO</div><b class="text-cyan-200">${nx?esc(nx.time+' '+nx.title):'Libero'}</b></button><button type="button" onclick="tab('trading');trSub('journal')" class="tile text-left"><div class="mono text-[9px] text-slate-400">TRADING OGGI</div><b class="${js.todT>=0?'text-emerald-300':'text-rose-400'}">${sg(js.todT)} €</b></button><button type="button" onclick="tab('money')" class="tile text-left"><div class="mono text-[9px] text-slate-400">SALDO MESE</div><b class="${ms.bal>=0?'text-emerald-300':'text-rose-400'}">${sg(ms.bal)} €</b></button><button type="button" onclick="tab('school')" class="tile text-left"><div class="mono text-[9px] text-slate-400">VERIFICA</div><b class="text-amber-300">${ver?(dd<=0?'Oggi ('+esc(ver.title)+')':dd+'gg · '+esc(ver.title)):'Nessuna'}</b></button>`}
-function localAnswer(t){const l=t.toLowerCase(),n=new Date();if(/che ore|che ora è|l'ora/.test(l))return`Sono le ${n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}, Signore.`;if(/che giorno|data di oggi/.test(l))return`Oggi è ${n.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.`;if(/materie.*domani|zaino/.test(l)){const td=dowFromISO(tomorrowISO()),s=SCHOOL_TIMETABLE[td];return s?`Domani (${DOW_NAMES[td]}) Andrea ha: ${s}.`:`Domani (${DOW_NAMES[td]}) riposo!`}if(/quanto ho fatto|totale.*(trading|journal)|bilancio.*journal/i.test(l)){const st=journalStats(),f=v=>(v>=0?'+':'')+v.toFixed(2);return`Journal:\n- Oggi: ${f(st.todT)} €\n- Mese: ${f(st.moT)} €\n- Totale (${st.count} trade, WR ${st.wr}%): ${f(st.tot)} €`}if(/media.*voti|qual è la mia media/i.test(l)){const avg=S.grades.length?(S.grades.reduce((s,g)=>s+(+g.val||0),0)/S.grades.length).toFixed(2):"0";return S.grades.length?`Media generale: ${avg}.`:"Nessun voto."}if(/quanto ho speso|totale.*spese|saldo.*mese/i.test(l)){const ms=moneyStats();return`Mese: entrate +${ms.inn.toFixed(2)}€, uscite -${ms.out.toFixed(2)}€, saldo ${ms.bal>=0?'+':''}${ms.bal.toFixed(2)}€.`}if(/agenda.*oggi|impegni.*oggi/.test(l))return agendaSummary();return null}
+function localAnswer(t){
+  const l=t.toLowerCase(),n=new Date();
+  if(/che ore|che ora è|l'ora/.test(l))return`Sono le ${n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}, Signore.`;
+  if(/che giorno|data di oggi/.test(l))return`Oggi è ${n.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.`;
+  if(/materie.*domani|zaino/.test(l)){const td=dowFromISO(tomorrowISO()),s=SCHOOL_TIMETABLE[td];return s?`Domani (${DOW_NAMES[td]}) Andrea ha: ${s}.`:`Domani (${DOW_NAMES[td]}) riposo!`}
+  if(/quanto ho fatto|totale.*(trading|journal)|bilancio.*journal/i.test(l)){const st=journalStats(),f=v=>(v>=0?'+':'')+v.toFixed(2);return`Journal:\n- Oggi: ${f(st.todT)} €\n- Mese: ${f(st.moT)} €\n- Totale (${st.count} trade, WR ${st.wr}%): ${f(st.tot)} €`}
+  if(/\b(ultim[ei]|elenca|dimmi|quali)\b.*\bvoti\b|\bche voti ho\b/i.test(l)){if(!S.grades.length)return"Non ci sono ancora voti salvati, Signore.";const avg=(S.grades.reduce((s,g)=>s+(+g.val||0),0)/S.grades.length).toFixed(2);return`Ultimi voti (media generale ${avg}):\n`+S.grades.slice(0,10).map(g=>`• ${g.subj}: ${g.val} (${formatDateBadge(g.date)})`).join('\n')}
+  if(/media.*voti|qual è la mia media/i.test(l)){const avg=S.grades.length?(S.grades.reduce((s,g)=>s+(+g.val||0),0)/S.grades.length).toFixed(2):"0";return S.grades.length?`Media generale: ${avg}.`:"Nessun voto."}
+  if(/quanto ho speso|totale.*spese|saldo.*mese/i.test(l)){const ms=moneyStats();return`Mese: entrate +${ms.inn.toFixed(2)}€, uscite -${ms.out.toFixed(2)}€, saldo ${ms.bal>=0?'+':''}${ms.bal.toFixed(2)}€.`}
+  if(/agenda.*oggi|impegni.*oggi/.test(l))return agendaSummary();
+  return null;
+}
 
-const CHAT_SCHEMA={type:"OBJECT",properties:{reply:{type:"STRING"},web_query:{type:"STRING"},music_query:{type:"STRING"},analyze_sym:{type:"STRING"},analyze_tf:{type:"STRING"},read_emails:{type:"BOOLEAN"},reply_email_query:{type:"STRING"},trading_mode:{type:"BOOLEAN"},alarm_time:{type:"STRING"},reminder_text:{type:"STRING"},whatsapp_text:{type:"STRING"},add_journal:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},asset:{type:"STRING"},pnl:{type:"NUMBER"},note:{type:"STRING"}},required:["pnl"]}},add_expense:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},type:{type:"STRING",enum:["out","in"]},cat:{type:"STRING"},amount:{type:"NUMBER"},note:{type:"STRING"}},required:["type","amount"]}},add_grade:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},subj:{type:"STRING"},val:{type:"NUMBER"}},required:["subj","val"]}},add_tasks:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},repeat:{type:"STRING"},time:{type:"STRING"},category:{type:"STRING"},title:{type:"STRING"}},required:["time","category","title"]}},complete_tasks:{type:"ARRAY",items:{type:"STRING"}},delete_tasks:{type:"ARRAY",items:{type:"STRING"}},add_list_item:{type:"ARRAY",items:{type:"OBJECT",properties:{list:{type:"STRING"},item:{type:"STRING"}},required:["item"]}},add_habit:{type:"ARRAY",items:{type:"STRING"}},complete_habit:{type:"ARRAY",items:{type:"STRING"}},add_goal:{type:"ARRAY",items:{type:"OBJECT",properties:{period:{type:"STRING"},title:{type:"STRING"},steps:{type:"ARRAY",items:{type:"STRING"}}},required:["title"]}},set_savings_goal:{type:"OBJECT",properties:{title:{type:"STRING"},target:{type:"NUMBER"},deadline:{type:"STRING"}}},remember:{type:"ARRAY",items:{type:"STRING"}}},required:["reply"]};
+const CHAT_SCHEMA={type:"OBJECT",properties:{reply:{type:"STRING"},web_query:{type:"STRING"},reach_type:{type:"STRING"},music_query:{type:"STRING"},analyze_sym:{type:"STRING"},analyze_tf:{type:"STRING"},read_emails:{type:"BOOLEAN"},reply_email_query:{type:"STRING"},trading_mode:{type:"BOOLEAN"},alarm_time:{type:"STRING"},reminder_text:{type:"STRING"},whatsapp_text:{type:"STRING"},add_journal:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},asset:{type:"STRING"},pnl:{type:"NUMBER"},note:{type:"STRING"}},required:["pnl"]}},add_expense:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},type:{type:"STRING",enum:["out","in"]},cat:{type:"STRING"},amount:{type:"NUMBER"},note:{type:"STRING"}},required:["type","amount"]}},add_grade:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},subj:{type:"STRING"},val:{type:"NUMBER"}},required:["subj","val"]}},add_tasks:{type:"ARRAY",items:{type:"OBJECT",properties:{date:{type:"STRING"},repeat:{type:"STRING"},time:{type:"STRING"},category:{type:"STRING"},title:{type:"STRING"}},required:["time","category","title"]}},complete_tasks:{type:"ARRAY",items:{type:"STRING"}},delete_tasks:{type:"ARRAY",items:{type:"STRING"}},add_list_item:{type:"ARRAY",items:{type:"OBJECT",properties:{list:{type:"STRING"},item:{type:"STRING"}},required:["item"]}},add_habit:{type:"ARRAY",items:{type:"STRING"}},complete_habit:{type:"ARRAY",items:{type:"STRING"}},add_goal:{type:"ARRAY",items:{type:"OBJECT",properties:{period:{type:"STRING"},title:{type:"STRING"},steps:{type:"ARRAY",items:{type:"STRING"}}},required:["title"]}},set_savings_goal:{type:"OBJECT",properties:{title:{type:"STRING"},target:{type:"NUMBER"},deadline:{type:"STRING"}}},remember:{type:"ARRAY",items:{type:"STRING"}}},required:["reply"]};
 function sanitizeContents(arr){const clean=[];(arr||[]).forEach(turn=>{if(!turn||!turn.parts||!turn.parts.length)return;const role=turn.role==='model'?'model':'user';if(clean.length&&clean[clean.length-1].role===role)clean[clean.length-1]={role,parts:[...clean[clean.length-1].parts,...turn.parts]};else clean.push({role,parts:turn.parts})});while(clean.length&&clean[0].role!=='user')clean.shift();return clean}
 function safeParseJson(raw){return JSON.parse(String(raw||"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim())}
 
-/* ---- MULTI-AI ROUTER CLIENT (Gemini diretto + FreeLLMAPI/Groq/Cerebras via Proxy Drive o Localhost) ---- */
 async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSchema=null){
   const clean=sanitizeContents(contents),hasImg=clean.some(t=>t.parts.some(p=>p.inlineData));
   const useDirectGem=(S.aiCfg.preferred==='gemini'||hasImg)&&S.key;
@@ -439,18 +504,24 @@ function matchTaskQuery(t,rawQ){const q=String(rawQ||"").trim().toLowerCase();if
 async function process(text){
   const notes=[];let memCh=false;const urls=text.match(/https?:\/\/[^\s]+/gi)||[];
   if(urls.length||/^\s*(ricordati|ricorda|memorizza|tieni a mente|non dimenticare|salva)\b/i.test(text)){const cn=`[${formatDateBadge(todayISO())}] ${text.trim()}`,dup=urls.length?urls.every(u=>S.memory.includes(u)):S.memory.toLowerCase().includes(text.trim().toLowerCase());if(!dup){S.memory=(S.memory?S.memory+"\n":"")+cn;$('memory').value=S.memory;memCh=true;notes.push("🧠 Memoria")}}
-  const tplTrigger=S.templates.find(tp=>new RegExp('\\bmodello\\s+'+tp.key+'\\b','i').test(text));if(tplTrigger){addMsg('jarvis',`Modello "${tplTrigger.key}":\n${tplTrigger.text}`,"⚡ Modello",tplTrigger.text);return}
-  if(/quanto ho fatto|totale.*(trading|journal)|bilancio.*journal/i.test(text)){const exact=localAnswer(text);S.history.push({role:"user",parts:[{text}]},{role:"model",parts:[{text:exact}]});addMsg('jarvis',exact,notes.join(" · "));speak(exact);await syncSave();return}
-  const loc=localAnswer(text);if(loc&&!hasAnyAiKey()){addMsg('jarvis',loc,notes.join(" · "));speak(loc);if(memCh)await syncSave();return}
+  const tplTrigger=S.templates.find(tp=>new RegExp('\\bmodello\\s+'+tp.key+'\\b','i').test(text));if(tplTrigger){addMsg('jarvis',`Modello "${tplTrigger.key}":\n${tplTrigger.text}`,"⚡ Modello",tplTrigger.text);speak(tplTrigger.text,true);return}
+
+  const loc=localAnswer(text);
+  if(loc&&(!hasAnyAiKey()||/quanto ho fatto|ultimi voti|che voti ho/i.test(text))){
+    S.history.push({role:"user",parts:[{text}]},{role:"model",parts:[{text:loc}]});
+    addMsg('jarvis',loc,notes.join(" · "));speak(loc,true);await syncSave();return;
+  }
   if(!hasAnyAiKey()){if(memCh){await syncSave();addMsg('jarvis',"Salvato in memoria, Signore.",notes.join(" · "));return}addMsg('jarvis',"Inserisci una chiave AI in ⚙.",notes.join(" · "));return}
 
-  $('status').textContent="ELABORAZIONE...";setCoreMode('think');
+  voiceBusy=true;stopMic();$('status').textContent="ELABORAZIONE...";setCoreMode('think');
   const now=new Date().toLocaleString('it-IT',{dateStyle:'full',timeStyle:'short'}),td=dowFromISO(todayISO()),tm=dowFromISO(tomorrowISO()),fullSchool=Object.keys(SCHOOL_TIMETABLE).map(k=>`${DOW_NAMES[k]}: ${SCHOOL_TIMETABLE[k]||'Riposo'}`).join('\n');
   const agenda=S.tasks.map(t=>`[id=${t.id}] ${t.date||(t.repeat?'FISSO '+t.repeat:'FISSO')} ${t.time} [${t.category}] ${t.title}${isTaskDone(t,todayISO())?' (fatto)':''}`).join('\n')||"vuota";
+  const js=journalStats(),jCtx=`Tot=${js.tot.toFixed(2)}€ (${js.w}V/${js.l}P, WR ${js.wr}%)\n`+(S.journal.slice(0,12).map(j=>`${j.date} ${j.asset} ${j.pnl>=0?'+':''}${j.pnl}`).join(', ')||'nessuno');
+  const gCtx=S.grades.length?S.grades.slice(0,15).map(g=>`${g.date} ${g.subj}: ${g.val}`).join(' | '):"nessuno";
   const ms=moneyStats(),secMem=[];if(/trade|xau|oro|mercato|analisi|journal|strategia|grafico|m15|h4/i.test(text)&&S.memSections.trading)secMem.push("TRADING:\n"+S.memSections.trading);if(/scuola|compit|verific|interrog|studi|zaino|voto|media/i.test(text)&&S.memSections.school)secMem.push("SCUOLA:\n"+S.memSections.school);if(/soldi|spes|budget|risparm|banca|abbonament|euro|entrat|guadagn/i.test(text)&&S.memSections.finance)secMem.push("SOLDI:\n"+S.memSections.finance);if(/uscit|ristorante|viaggi|serata|tempo libero|mangiare|gusti/i.test(text)&&S.memSections.tastes)secMem.push("GUSTI:\n"+S.memSections.tastes);
   const memTargeted=(secMem.length?secMem.join("\n\n")+"\n\n":"")+"GENERALE:\n"+(S.memory||"vuota"),isPersonalRecall=/avevo inviato|avevo mandato|avevi salvato|ti ho inviato|ti ho mandato|ti ho detto|in memoria|ieri sera/i.test(text);
-  const dbRules=`\n\nREGOLE:\n- Oggi=${todayISO()}, Domani=${tomorrowISO()}.\n- Non fingere MAI azioni esterne.\n- SPOSTA/ELIMINA AGENDA: usa "delete_tasks" passando l'ID esatto o "YYYY-MM-DD parola".\n- SOLDI: in "add_expense" usa type:"in" per entrate/guadagni/trovati, "out" per spese! ${S.demoAccount?'CONTO MT5 DEMO: per profitti/TP/SL di trading usa SOLO add_journal e MAI add_expense!':''}\n- EMAIL: "read_emails":true per leggere, "reply_email_query" per bozza + permesso Telegram.\n- LIVE: "analyze_sym"+"analyze_tf". SCUOLA:\n${fullSchool}`;
-  const sys=`${S.playbook}${dbRules}\n\nMemoria:\n${memTargeted}\nOra:${now}\nSoldi mese: +${ms.inn.toFixed(2)}€ / -${ms.out.toFixed(2)}€\nAgenda:\n${agenda}`;
+  const dbRules=`\n\nREGOLE:\n- Oggi=${todayISO()}, Domani=${tomorrowISO()}.\n- Non fingere MAI azioni esterne.\n- SPOSTA/ELIMINA AGENDA: usa "delete_tasks" con ID o "YYYY-MM-DD parola".\n- SOLDI: "add_expense" usa type:"in" per entrate/guadagni/trovati, "out" per spese! ${S.demoAccount?'CONTO MT5 DEMO: per TP/SL/profitti trading usa SOLO add_journal e MAI add_expense!':''}\n- AGENT-REACH (Web/Reddit/GitHub/YT): per leggere un sito, Reddit o repo GitHub compila "web_query" e opz. "reach_type" ("web"|"reddit"|"github"|"youtube").\n- EMAIL: "read_emails":true per leggere, "reply_email_query" per bozza + permesso Telegram.\n- LIVE: "analyze_sym"+"analyze_tf". SCUOLA:\n${fullSchool}`;
+  const sys=`${S.playbook}${dbRules}\n\nMemoria:\n${memTargeted}\nOra:${now}\nVoti (${S.grades.length}): ${gCtx}\nJournal: ${jCtx}\nSoldi mese: +${ms.inn.toFixed(2)}€ / -${ms.out.toFixed(2)}€\nAgenda:\n${agenda}`;
   S.history.push({role:"user",parts:[{text}]});
   const userPositiveIncome=/\b(trovato|guadagnato|ricevuto|entrata|entrate|aggiung|vinto|incassato|regalo|in più|saldo.*ne ho|differenza)\b/i.test(text)&&!/\b(speso|pagato|comprato|perso|uscita|uscite|spesa|costo)\b/i.test(text);
 
@@ -459,7 +530,7 @@ async function process(text){
     if(parsed.read_emails&&S.driveUrl){$('status').textContent="LETTURA GMAIL...";try{const gm=await driveRequest("gmail_list",S.pin||FALLBACK_PIN);gmailCache=gm.emails||[];raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`EMAIL NON LETTE:\n${gmailCache.map(m=>`- Da: ${m.from} | Oggetto: ${m.subject} | ${m.snippet}`).join('\n')||'Nessuna.'}\nRiassumi e chiedi a quali rispondere su Telegram. Lascia "read_emails":false.`}]}],true);try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}}catch(ge){notes.push("⚠️ Errore Gmail")}}
     else if(parsed.reply_email_query&&S.driveUrl){$('status').textContent="PREPARO BOZZA...";try{const dr=await driveRequest("gmail_draft_tg",S.pin||FALLBACK_PIN,{query:parsed.reply_email_query});if(dr.pending)S.pendingEmails.unshift(dr.pending);renderPendingEmails();parsed.reply=dr.ok?`Bozza per ${dr.pending.to} creata e permesso inviato su Telegram!`:"Email non trovata."}catch(de){notes.push("⚠️ Errore bozza")}}
     else if(parsed.analyze_tf&&S.driveUrl){$('status').textContent="DATI MULTI-TF...";try{const sym=(parsed.analyze_sym||"XAUUSD").toUpperCase(),tf=parsed.analyze_tf,[cr,nr,er]=await Promise.all([driveRequest("live_chart",S.pin||FALLBACK_PIN,{symbol:sym,tf,mtf:true}),driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}),driveRequest("econ_cal",S.pin||FALLBACK_PIN)]),econTxt=(er.events||[]).filter(ev=>ev.impact==='High').slice(0,8).map(ev=>`${ev.label} [${ev.country}] ${ev.title}`).join('\n')||"nessuno";raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`DATI MTF:\n${cr.chart||''}\n\nNEWS:\n${nr.news||''}\n\nECON HIGH:\n${econTxt}\n\nDai segnale COMPRA/VENDI/ASPETTA, Entry, TP, SL, R/R. Lascia "analyze_tf":"" e non toccare il journal.`}]}],true);try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}}catch(le){notes.push("⚠️ Dati live non disponibili")}}
-    else if(!isPersonalRecall&&parsed.web_query&&String(parsed.web_query).trim()&&S.driveUrl){$('status').textContent="RICERCA WEB...";try{const w=await driveRequest("web",S.pin||FALLBACK_PIN,{query:String(parsed.web_query).trim()});if(w.ok&&w.results){raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`RISULTATI WEB:\n${w.results}\nRispondi e lascia "web_query":""`}]}],true);try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}}}catch(we){notes.push("⚠️ Errore web")}}
+    else if(!isPersonalRecall&&parsed.web_query&&String(parsed.web_query).trim()&&S.driveUrl){$('status').textContent="AGENT-REACH WEB...";try{const w=await driveRequest("agent_reach",S.pin||FALLBACK_PIN,{query:String(parsed.web_query).trim(),type:parsed.reach_type||"web"});if(w.ok&&w.results){raw=await callGemini(sys,[...S.history.slice(-24),{role:"user",parts:[{text:`RISULTATI AGENT-REACH:\n${w.results}\nRispondi usando questi dati e lascia "web_query":""`}]}],true);try{parsed=safeParseJson(raw)}catch(e){parsed={reply:raw}}}}catch(we){notes.push("⚠️ Errore web")}}
 
     let musicData=null;const mq=String(parsed.music_query||"").trim();if(mq&&!/^(null|none|nessuno)$/i.test(mq)&&S.driveUrl){$('status').textContent="CERCO BRANO...";try{const mr=await driveRequest("music",S.pin||FALLBACK_PIN,{query:mq});musicData=(mr.ok&&mr.track&&mr.track.demusUrl)?{label:`Riproduci in Demus: ${mq}`,url:mr.track.demusUrl}:{label:`Apri Demus (${mq})`,url:"demus://"}}catch(me){musicData={label:`Apri Demus (${mq})`,url:"demus://"}}}
     const reply=parsed.reply||"Fatto, Signore.",wantsWa=/whatsapp|messaggio|scrivi a|manda a|invia a|avvisa/i.test(text),rawWa=String(parsed.whatsapp_text||"").trim(),waText=(wantsWa&&rawWa&&!/^(null|none|nessuno|n\/a)$/i.test(rawWa))?rawWa:"",tradingMode=Boolean(parsed.trading_mode),remData=String(parsed.reminder_text||"").trim();
@@ -480,10 +551,38 @@ async function process(text){
     if(Array.isArray(parsed.remember)){parsed.remember.forEach(it=>{const c=String(it||"").trim();if(c&&!S.memory.toLowerCase().includes(c.toLowerCase())){S.memory=(S.memory?S.memory+"\n":"")+c;memCh=true}});if(memCh){$('memory').value=S.memory;if(!notes.includes("🧠 Memoria"))notes.push("🧠 Memoria")}}
     if(agCh){sortTasks();renderAgenda()} if(jCh)renderJournal(); if(mnCh){syncInputs();renderMoney()} if(scCh)renderGrades(); if(hbCh)renderHabitsLists(); if(glCh)renderGoals();
     S.history.push({role:"model",parts:[{text:reply}]});if(S.history.length>50)S.history=S.history.slice(-50);
-    setCoreMode('idle');addMsg('jarvis',reply,notes.join(" · "),waText,alarmData,musicData,tradingMode,remData);speak(reply);await syncSave();
+    voiceBusy=false;setCoreMode('idle');addMsg('jarvis',reply,notes.join(" · "),waText,alarmData,musicData,tradingMode,remData);speak(reply,activeDialog);await syncSave();
     if(musicData)openExternal(musicData.url);else if(tradingMode)tab('trading');
-  }catch(err){setCoreMode('idle');S.history.pop();addMsg('jarvis',"Errore AI: "+err.message);if(memCh)await syncSave();speak("Errore temporaneo, Signore.")}
+  }catch(err){voiceBusy=false;setCoreMode('idle');S.history.pop();addMsg('jarvis',"Errore AI: "+err.message);if(memCh)await syncSave();speak("Errore temporaneo, Signore.",activeDialog)}
   updateStatus();
+}
+
+/* ---- SKILL AGENT-REACH & STRIX SECURITY AUDIT ---- */
+async function runAgentReach(){
+  const q=$('arQ').value.trim(),tp=$('arType').value;if(!q||!S.driveUrl)return alert("Inserisci un URL o argomento.");
+  const o=$('arOut');o.classList.remove('hidden');o.textContent=`Agent-Reach (${tp}) in corso...`;
+  try{
+    const res=await driveRequest("agent_reach",S.pin||FALLBACK_PIN,{query:q,type:tp});
+    if(!res.ok)throw new Error(res.error||"Errore");
+    o.innerHTML=formatRich(res.results||"Nessun dato.");
+  }catch(e){o.textContent="Errore: "+e.message}
+}
+function auditJarvisSecurity(){
+  const res=[];
+  res.push(FALLBACK_PIN==="2009"?"⚠️ PIN predefinito (2009): consigliato cambiarlo in un PIN di 6+ cifre in Code.gs e HTML.":"✅ PIN personalizzato.");
+  res.push(S.driveUrl.startsWith("https://")?"✅ Database Google Drive cifrato HTTPS.":"🚨 URL Drive non HTTPS!");
+  res.push(S.pushCfg.tgChatId?"✅ Webhook Telegram protetto: risponde solo al tuo Chat ID.":"⚠️ Chat ID Telegram mancante: bot non vincolato.");
+  res.push(S.aiCfg.strictPrivacy?"✅ Privacy Lock ATTIVO: nessun dato inviato ad AI secondarie.":"ℹ️ Failover Multi-AI attivo (disattivabile con Privacy Lock in ⚙).");
+  res.push(S.demoAccount?"✅ Conto MT5 DEMO isolato dal budget reale.":"ℹ️ Conto MT5 Reale.");
+  const o=$('strixOut');o.classList.remove('hidden');o.innerHTML=formatRich("🛡 **AUDIT SICUREZZA JARVIS (STRIX)**:\n\n"+res.join("\n"));
+}
+async function auditCustomCode(){
+  const txt=$('strixIn').value.trim();if(!txt||!hasAnyAiKey())return alert("Incolla codice o URL da controllare e verifica chiave AI.");
+  const o=$('strixOut');o.classList.remove('hidden');o.textContent="Scansione vulnerabilità difensiva Strix AI...";
+  try{
+    const out=await callGemini("Sei un auditor di sicurezza difensivo (Strix). Analizza SOLO a scopo difensivo il codice o URL fornito dall'utente: elenca eventuali vulnerabilità reali (XSS, SSRF, SQLi, token/chiavi esposte, auth mancante) e mostra come correggerle in modo sicuro.",[{role:"user",parts:[{text:txt.slice(0,6000)}]}],false,850);
+    o.innerHTML=formatRich(out);
+  }catch(e){o.textContent="Errore: "+e.message}
 }
 
 function morningBriefing(){primeAudio();const td=dowFromISO(todayISO()),todTasks=tasksForDate(todayISO()).filter(t=>!isTaskDone(t,todayISO())).sort((a,b)=>a.time.localeCompare(b.time)),ver=S.tasks.filter(x=>x.date&&x.date>=todayISO()&&!x.done&&/verific|interrog/i.test(x.title)).sort((a,b)=>a.date.localeCompare(b.date))[0],msg=`☀️ MATTINO (${DOW_NAMES[td]} ${formatDateBadge(todayISO())}):\n• Scuola: ${SCHOOL_TIMETABLE[td]||'Riposo'}\n• Agenda: ${todTasks.length?todTasks.map(t=>t.time+' '+t.title).join(' · '):'nessun impegno'}\n${ver?'• Prossima verifica: '+formatDateBadge(ver.date)+' '+ver.title+'\n':''}Cosa vuole spostare oggi, Signore?`;addMsg('jarvis',msg,"☀️ Briefing");speak(msg,true)}
@@ -603,5 +702,3 @@ init();
 </script>
 </body>
 </html>
-
-
