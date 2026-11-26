@@ -468,16 +468,17 @@ function sanitizeContents(arr){const clean=[];(arr||[]).forEach(turn=>{if(!turn|
 function safeParseJson(raw){return JSON.parse(String(raw||"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim())}
 
 async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSchema=null){
-  const clean=sanitizeContents(contents),hasImg=clean.some(t=>t.parts.some(p=>p.inlineData));
-  const useDirectGem=(S.aiCfg.preferred==='gemini'||hasImg)&&S.key;
-  if(useDirectGem){
-    const model=S.model||"gemini-3.5-flash-lite",url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,body={contents:clean,generationConfig:{}};
-    if(sys)body.system_instruction={parts:[{text:sys}]};if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;
-    for(let i=0;i<2;i++){
-      const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),40000);
-      try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal}),d=await r.json();if(r.ok&&!d.error)return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||"";if(S.aiCfg.strictPrivacy)throw new Error(d.error?.message||"HTTP "+r.status);break}
-      catch(e){if(S.aiCfg.strictPrivacy&&i===1)throw e;if(i===0)await new Promise(r=>setTimeout(r,1000))}finally{clearTimeout(tm)}
+  const clean=sanitizeContents(contents),hasImg=clean.some(t=>t.parts.some(p=>p.inlineData));let lastErr="";
+  if((S.aiCfg.preferred==='gemini'||hasImg)&&S.key){
+    const mList=S.aiCfg.strictPrivacy?[S.model||"gemini-3.5-flash-lite"]:[...new Set([S.model||"gemini-3.5-flash-lite","gemini-3.6-flash","gemini-3.8-flash"])];
+    for(const model of mList){
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,body={contents:clean,generationConfig:{}};
+      if(sys)body.system_instruction={parts:[{text:sys}]};if(useSchema){body.generationConfig.responseMimeType="application/json";body.generationConfig.responseSchema=customSchema||CHAT_SCHEMA}if(maxTokens)body.generationConfig.maxOutputTokens=maxTokens;
+      const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
+      try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body),signal:ctrl.signal}),d=await r.json();if(r.ok&&!d.error)return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||"";lastErr=d.error?.message||("HTTP "+r.status)}
+      catch(e){lastErr=e.message}finally{clearTimeout(tm)}
     }
+    if(hasImg||S.aiCfg.strictPrivacy)throw new Error(lastErr||"Errore Gemini");
   }
   if(!hasImg&&S.aiCfg.preferred==='custom'&&/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.)/i.test(S.aiCfg.customUrl||"")){
     try{
@@ -485,16 +486,11 @@ async function callGemini(sys,contents,useSchema=false,maxTokens=null,customSche
       const u=S.aiCfg.customUrl.replace(/\/+$/,'')+(S.aiCfg.customUrl.endsWith('/chat/completions')?'':'/chat/completions');
       const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(S.aiCfg.customKey||'free')},body:JSON.stringify({model:S.aiCfg.customModel||'auto',messages:msgs})}),d=await r.json();
       if(r.ok&&d.choices?.[0]?.message?.content)return d.choices[0].message.content.trim();
-    }catch(e){}
+    }catch(e){lastErr=e.message}
   }
-  if(S.driveUrl&&!hasImg){
-    const res=await driveRequest("ai_chat",S.pin||FALLBACK_PIN,{sys,contents:clean,schema:useSchema?(customSchema||CHAT_SCHEMA):null});
-    if(res.ok&&res.text)return res.text;
-    throw new Error(res.error||"Errore router AI");
-  }
-  throw new Error("Inserisci chiave Gemini o provider AI in ⚙.");
+  if(S.driveUrl&&!hasImg){const res=await driveRequest("ai_chat",S.pin||FALLBACK_PIN,{sys,contents:clean,schema:useSchema?(customSchema||CHAT_SCHEMA):null});if(res.ok&&res.text)return res.text;lastErr=res.error||lastErr}
+  throw new Error(lastErr||"Inserisci chiave Gemini o provider AI in ⚙.");
 }
-
 function normalizeCat(c){const u=String(c||"").toUpperCase().trim();return VALID_CATS.includes(u)?u:"PERSONALE"}
 function sortTasks(){S.tasks.sort((a,b)=>(a.date||'9999-99-99').localeCompare(b.date||'9999-99-99')||a.time.localeCompare(b.time))}
 function bodyKey(s){return String(s||"").replace(/^[^:]+:\s*/,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
@@ -603,7 +599,7 @@ function renderChecklist(){const done=chkState.filter(Boolean).length;$('chkScor
 function toggleChk(i){chkState[i]=!chkState[i];renderChecklist()}
 async function loadEconCal(show=true){const el=$('econList');if(!S.driveUrl)return;if(show)el.textContent="Caricamento...";try{const res=await driveRequest("econ_cal",S.pin||FALLBACK_PIN);econCache=Array.isArray(res.events)?res.events:[];el.innerHTML=econCache.length?econCache.map(ev=>`<div class="p-2.5 rounded-xl border ${ev.impact==='High'?'bg-rose-950/25 border-rose-500/35':'bg-amber-950/20 border-amber-500/25'} flex justify-between gap-2"><div class="min-w-0"><span class="mono text-[9px] ${ev.impact==='High'?'text-rose-300':'text-amber-300'} font-bold">${esc(ev.label)} · ${esc(ev.country)}</span><div class="text-slate-100 truncate">${esc(ev.title)}</div></div><div class="mono text-[9px] text-slate-400 text-right shrink-0">${esc(ev.forecast)}<br>${esc(ev.previous)}</div></div>`).join(''):"Nessun evento."}catch(e){el.textContent="Errore: "+e.message}}
 async function analyzeLiveChart(){if(!hasAnyAiKey()||!S.driveUrl){$('chartBox').classList.remove('hidden');$('chartOut').textContent="Serve chiave AI e Drive.";return}const sym=$('trSym').value,tf=$('trTf').value,idea=$('chartIdea').value.trim();$('chartBox').classList.remove('hidden');$('chartMeta').textContent=`LIVE MTF ${sym} (H4+${tf.toUpperCase()})`;let sec=0;$('chartOut').textContent=`Scarico dati H4 + ${tf.toUpperCase()}... (0s)`;clearInterval(chartTimer);chartTimer=setInterval(()=>{sec++;$('chartOut').textContent=`Analisi MTF ${sym}... (${sec}s)`},1000);try{const[cr,nr,er]=await Promise.all([driveRequest("live_chart",S.pin||FALLBACK_PIN,{symbol:sym,tf,mtf:true}),driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}),econCache.length?Promise.resolve({events:econCache}):driveRequest("econ_cal",S.pin||FALLBACK_PIN)]),econTxt=(er.events||[]).filter(ev=>ev.impact==='High').slice(0,8).map(ev=>`${ev.label} [${ev.country}] ${ev.title}`).join('\n')||"nessuno",out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Analizza DATI MTF di ${sym} (non aggiungere al journal). Idea: "${idea||'nessuna'}".\nDati:\n${cr.chart||''}\nNews:\n${nr.news||''}\nEcon High:\n${econTxt}\n1) Confluenza H4+${tf.toUpperCase()} 2) SEGNALE COMPRA/VENDI/ASPETTA 3) ENTRY | SL | TP (R/R).`}]}],false,950);clearInterval(chartTimer);const entry={id:Date.now(),dateTime:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),idea:`${sym} H4+${tf.toUpperCase()}${idea?' · '+idea:''}`,analysis:out};S.charts.unshift(entry);if(S.charts.length>15)S.charts=S.charts.slice(0,15);showChartEntry(entry);renderChartsHistory();await syncSave();speak("Analisi completata, Signore.")}catch(err){clearInterval(chartTimer);$('chartOut').textContent="Errore: "+err.message}}
-async function analyzePhotoChart(e){const f=e.target.files[0];if(!f)return;e.target.value='';if(!S.key)return alert("Serve chiave Gemini per foto.");$('chartBox').classList.remove('hidden');$('chartMeta').textContent="ANALISI FOTO";let sec=0;clearInterval(chartTimer);chartTimer=setInterval(()=>{sec++;$('chartOut').textContent=`Analisi foto... (${sec}s)`},1000);try{const[img,nr]=await Promise.all([fileToJpegBase64(f,1100),S.driveUrl?driveRequest("market_news",S.pin||FALLBACK_PIN,{query:$('trSym').value}):Promise.resolve({news:""})]),out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Analizza grafico (${$('trSym').value}). News:\n${nr.news||''}\nDai SEGNALE, ENTRY, TP, SL.`},{inlineData:{mimeType:img.mime,data:img.data}}]}],false,900);clearInterval(chartTimer);const entry={id:Date.now(),dateTime:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),idea:`${$('trSym').value} Foto`,analysis:out};S.charts.unshift(entry);showChartEntry(entry);renderChartsHistory();await syncSave();speak("Analisi foto completata.",true)}catch(err){clearInterval(chartTimer);$('chartOut').textContent="Errore: "+err.message}}
+async function analyzePhotoChart(e){const f=e.target.files[0];if(!f)return;e.target.value='';if(!S.key)return alert("Serve chiave Gemini per foto.");const sym=$('trSym').value,idea=$('chartIdea').value.trim();$('chartBox').classList.remove('hidden');$('chartMeta').textContent=`FOTO ${sym}${idea?' · '+idea:''}`;let sec=0;clearInterval(chartTimer);chartTimer=setInterval(()=>{sec++;$('chartOut').textContent=`Analisi foto... (${sec}s)`},1000);try{const[img,nr]=await Promise.all([fileToJpegBase64(f,1100),S.driveUrl?driveRequest("market_news",S.pin||FALLBACK_PIN,{query:sym}):Promise.resolve({news:""})]),out=await callGemini(S.playbook,[{role:"user",parts:[{text:`Analizza questo screenshot grafico (${sym}). Nota/Contesto utente: "${idea||'nessuna'}".\nNews:\n${nr.news||''}\nValuta oggettivamente COMPRA/VENDI/ASPETTA, indica struttura, ENTRY, TP e SL (R/R).`},{inlineData:{mimeType:img.mime,data:img.data}}]}],false,900);clearInterval(chartTimer);const entry={id:Date.now(),dateTime:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),idea:`${sym} Foto${idea?' · '+idea:''}`,analysis:out};S.charts.unshift(entry);showChartEntry(entry);renderChartsHistory();await syncSave();speak("Analisi foto completata.",true)}catch(err){clearInterval(chartTimer);$('chartOut').textContent="Errore: "+err.message}}
 function showChartEntry(e){if(!e)return;currentChartText=`${e.dateTime} - ${e.idea}\n\n${e.analysis}`;$('chartBox').classList.remove('hidden');$('chartMeta').textContent=`${e.dateTime} · ${e.idea}`;$('chartOut').innerHTML=formatRich(e.analysis)}
 function renderChartsHistory(){const b=$('chartsHistBox'),l=$('chartsList');l.innerHTML='';if(!S.charts.length){b.classList.add('hidden');return}b.classList.remove('hidden');showChartEntry(S.charts[0]);S.charts.forEach(c=>{const d=document.createElement('div');d.className="rb flex items-center gap-2";d.innerHTML=`<button type="button" onclick="openChart(${c.id})" class="flex-1 text-left min-w-0"><div class="mono text-[10px] text-amber-300">${esc(c.dateTime)}</div><div class="text-xs text-slate-200 truncate">${esc(c.idea)}</div></button><button type="button" onclick="delChart(${c.id})" class="p-1.5 text-slate-500 text-xs">✕</button>`;l.appendChild(d)})}
 function openChart(id){const c=S.charts.find(x=>x.id===id);if(c)showChartEntry(c)}
